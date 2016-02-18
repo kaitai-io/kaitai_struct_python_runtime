@@ -53,3 +53,11 @@ class KaitaiStruct:
 
     def read_s8be(self):
         return unpack('>q', self._io.read(8))[0]
+
+    def is_io_eof(self, io):
+        t = io.read(1)
+        if t == '':
+            return True
+        else:
+            io.seek(io.tell() - 1)
+            return False
