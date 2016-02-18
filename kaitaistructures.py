@@ -54,6 +54,24 @@ class KaitaiStruct:
     def read_s8be(self):
         return unpack('>q', self._io.read(8))[0]
 
+    def read_strz(self, encoding, term, include_term, consume_term, eos_error):
+        r = ''
+        while True:
+            c = self._io.read(1)
+            if c == '':
+                if eos_error:
+                    raise Exception("End of stream reached, but no terminator %d found" % (term))
+                else:
+                    return r
+            elif ord(c) == term:
+                if include_term:
+                    r += c
+                if not consume_term:
+                    self._io.seek(self._io.tell() - 1)
+                return r
+            else:
+                r += c
+
     def is_io_eof(self, io):
         t = io.read(1)
         if t == '':
