@@ -72,6 +72,9 @@ class KaitaiStruct:
             else:
                 r += c
 
+    def read_str_byte_limit(self, size, encoding):
+        return self._io.read(size).decode(encoding)
+
     def is_io_eof(self, io):
         t = io.read(1)
         if t == '':
