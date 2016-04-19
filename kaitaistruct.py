@@ -82,3 +82,16 @@ class KaitaiStruct:
         else:
             io.seek(io.tell() - 1)
             return False
+
+    @staticmethod
+    def process_rotate_left(data, amount, group_size):
+        if group_size != 1:
+            raise Exception("unable to rotate group of %d bytes yet" % (group_size))
+
+        mask = group_size * 8 - 1
+        anti_amount = -amount & mask
+
+        r = array.array('B', data)
+        for i in xrange(len(r)):
+            r[i] = (r[i] << amount) & 0xff | (r[i] >> anti_amount)
+        return r.tostring()
