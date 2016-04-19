@@ -54,6 +54,12 @@ class KaitaiStruct:
     def read_s8be(self):
         return unpack('>q', self._io.read(8))[0]
 
+    def read_str_eos(self, encoding):
+        return self._io.read().decode(encoding)
+
+    def read_str_byte_limit(self, size, encoding):
+        return self._io.read(size).decode(encoding)
+
     def read_strz(self, encoding, term, include_term, consume_term, eos_error):
         r = ''
         while True:
@@ -71,9 +77,6 @@ class KaitaiStruct:
                 return r
             else:
                 r += c
-
-    def read_str_byte_limit(self, size, encoding):
-        return self._io.read(size).decode(encoding)
 
     def is_io_eof(self, io):
         t = io.read(1)
