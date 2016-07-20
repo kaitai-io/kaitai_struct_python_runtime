@@ -87,6 +87,25 @@ class KaitaiStruct:
             return False
 
     @staticmethod
+    def process_xor_one(data, key):
+        r = array.array('B', data)
+        for i in xrange(len(r)):
+            r[i] ^= key
+        return r.tostring()
+
+    @staticmethod
+    def process_xor_many(data, key):
+        r = array.array('B', data)
+        ki = 0
+        kl = len(key)
+        for i in xrange(len(r)):
+            r[i] ^= ord(key[ki])
+            ki += 1
+            if ki >= kl:
+                ki = 0
+        return r.tostring()
+
+    @staticmethod
     def process_rotate_left(data, amount, group_size):
         if group_size != 1:
             raise Exception("unable to rotate group of %d bytes yet" % (group_size))
