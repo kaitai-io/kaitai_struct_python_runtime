@@ -54,6 +54,22 @@ class KaitaiStruct:
     def read_s8be(self):
         return unpack('>q', self._io.read(8))[0]
 
+    # Floating point types
+
+    def read_f4le(self):
+        return unpack('<f', self._io.read(4))[0]
+
+    def read_f8le(self):
+        return unpack('<d', self._io.read(8))[0]
+
+    def read_f4be(self):
+        return unpack('>f', self._io.read(4))[0]
+
+    def read_f8be(self):
+        return unpack('>d', self._io.read(8))[0]
+
+    # String types
+
     def read_str_eos(self, encoding):
         return self._io.read().decode(encoding)
 
