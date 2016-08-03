@@ -2,8 +2,138 @@ from struct import unpack
 import array
 
 class KaitaiStruct:
+    def __init__(self, _io):
+        self._io = _io
+
+class KaitaiStream:
+    def __init__(self, _io):
+        self._io = _io
+
     def close(self):
         self._io.close()
+
+    # ========================================================================
+    # Stream positioning
+    # ========================================================================
+
+    def is_eof(self):
+        io = self._io
+        t = io.read(1)
+        if t == '':
+            return True
+        else:
+            io.seek(io.tell() - 1)
+            return False
+
+    def seek(self, n):
+        self._io.seek(n)
+
+    def pos(self):
+        return self._io.tell()
+
+    # ========================================================================
+    # Integer numbers
+    # ========================================================================
+
+    # ------------------------------------------------------------------------
+    # Signed
+    # ------------------------------------------------------------------------
+
+    def read_s1(self):
+        return unpack('b', self._io.read(1))[0]
+
+    # ........................................................................
+    # Big-endian
+    # ........................................................................
+
+    def read_s2be(self):
+        return unpack('>h', self._io.read(2))[0]
+
+    def read_s4be(self):
+        return unpack('>i', self._io.read(4))[0]
+
+    def read_s8be(self):
+        return unpack('>q', self._io.read(8))[0]
+
+    # ........................................................................
+    # Little-endian
+    # ........................................................................
+
+    def read_s2le(self):
+        return unpack('<h', self._io.read(2))[0]
+
+    def read_s4le(self):
+        return unpack('<i', self._io.read(4))[0]
+
+    def read_s8le(self):
+        return unpack('<q', self._io.read(8))[0]
+
+    # ------------------------------------------------------------------------
+    # Unsigned
+    # ------------------------------------------------------------------------
+
+    def read_u1(self):
+        return unpack('B', self._io.read(1))[0]
+
+    # ........................................................................
+    # Big-endian
+    # ........................................................................
+
+    def read_u2be(self):
+        return unpack('>H', self._io.read(2))[0]
+
+    def read_u4be(self):
+        return unpack('>I', self._io.read(4))[0]
+
+    def read_u8be(self):
+        return unpack('>Q', self._io.read(8))[0]
+
+    # ........................................................................
+    # Little-endian
+    # ........................................................................
+
+    def read_u2le(self):
+        return unpack('<H', self._io.read(2))[0]
+
+    def read_u4le(self):
+        return unpack('<I', self._io.read(4))[0]
+
+    def read_u8le(self):
+        return unpack('<Q', self._io.read(8))[0]
+
+    # ========================================================================
+    # Floating point numbers
+    # ========================================================================
+
+    # ........................................................................
+    # Big-endian
+    # ........................................................................
+
+    def read_f4be(self):
+        return unpack('>f', self._io.read(4))[0]
+
+    def read_f8be(self):
+        return unpack('>d', self._io.read(8))[0]
+
+    # ........................................................................
+    # Little-endian
+    # ........................................................................
+
+    def read_f4le(self):
+        return unpack('<f', self._io.read(4))[0]
+
+    def read_f8le(self):
+        return unpack('<d', self._io.read(8))[0]
+
+    # ========================================================================
+    # Byte arrays
+    # ========================================================================
+
+    def read_bytes(self, n):
+        return self._io.read(n)
+
+    def read_bytes_full(self):
+        return self._io.read()
 
     def ensure_fixed_contents(self, size, expected):
         buf = self._io.read(size)
@@ -12,63 +142,9 @@ class KaitaiStruct:
             raise Exception("Unexpected fixed contents: got %s, was waiting for %s" % (str(actual), str(expected)))
         return buf
 
-    def read_u1(self):
-        return unpack('B', self._io.read(1))[0]
-
-    def read_s1(self):
-        return unpack('b', self._io.read(1))[0]
-
-    def read_u2le(self):
-        return unpack('<H', self._io.read(2))[0]
-
-    def read_s2le(self):
-        return unpack('<h', self._io.read(2))[0]
-
-    def read_u4le(self):
-        return unpack('<I', self._io.read(4))[0]
-
-    def read_s4le(self):
-        return unpack('<i', self._io.read(4))[0]
-
-    def read_u8le(self):
-        return unpack('<Q', self._io.read(8))[0]
-
-    def read_s8le(self):
-        return unpack('<q', self._io.read(8))[0]
-
-    def read_u2be(self):
-        return unpack('>H', self._io.read(2))[0]
-
-    def read_s2be(self):
-        return unpack('>h', self._io.read(2))[0]
-
-    def read_u4be(self):
-        return unpack('>I', self._io.read(4))[0]
-
-    def read_s4be(self):
-        return unpack('>i', self._io.read(4))[0]
-
-    def read_u8be(self):
-        return unpack('>Q', self._io.read(8))[0]
-
-    def read_s8be(self):
-        return unpack('>q', self._io.read(8))[0]
-
-    # Floating point types
-
-    def read_f4le(self):
-        return unpack('<f', self._io.read(4))[0]
-
-    def read_f8le(self):
-        return unpack('<d', self._io.read(8))[0]
-
-    def read_f4be(self):
-        return unpack('>f', self._io.read(4))[0]
-
-    def read_f8be(self):
-        return unpack('>d', self._io.read(8))[0]
-
-    # String types
+    # ========================================================================
+    # Strings
+    # ========================================================================
 
     def read_str_eos(self, encoding):
         return self._io.read().decode(encoding)
@@ -94,13 +170,9 @@ class KaitaiStruct:
             else:
                 r += c
 
-    def is_io_eof(self, io):
-        t = io.read(1)
-        if t == '':
-            return True
-        else:
-            io.seek(io.tell() - 1)
-            return False
+    # ========================================================================
+    # Byte array processing
+    # ========================================================================
 
     @staticmethod
     def process_xor_one(data, key):
