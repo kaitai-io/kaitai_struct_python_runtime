@@ -2,15 +2,47 @@
 
 This library implements Kaitai Struct API for Python.
 
-Kaitai Struct is a declarative language used for describe various binary
-data structures, laid out in files or in memory: i.e. binary file
-formats, network stream packet formats, etc.
+[Kaitai Struct](http://kaitai.io) is a declarative language used for
+describe various binary data structures, laid out in files or in memory:
+i.e. binary file formats, network stream packet formats, etc.
+
+It is similar to Python's [construct] and [Construct3], but it is
+language-agnostic. The format description is done in YAML-based .ksy
+format, which then can be compiled into a wide range of target languages.
+
+[construct]: https://pypi.python.org/pypi/construct
+[Construct3]: http://tomerfiliba.com/blog/Survey-of-Construct3/
 
 Further reading:
 
 * [About Kaitai Struct](https://github.com/kaitai-io/kaitai_struct/)
 * [About API implemented in this library](https://github.com/kaitai-io/kaitai_struct/wiki/Kaitai-Struct-stream-API)
 * [Python-specific notes](https://github.com/kaitai-io/kaitai_struct/wiki/Python)
+
+## Installing
+
+### Using `requirements.txt`
+
+If you want to use Kaitai Struct runtime in your project and you use
+`requirements.txt` to manage your dependencies, just add the following
+line to it:
+
+```
+kaitaistruct
+```
+
+and then run `pip install -r requirements.txt` to update all your
+dependencies.
+
+### Using `pip` directly
+
+You can use
+
+```shell
+pip install kaitaistruct
+```
+
+to install the package manually using `pip` Python package manager.
 
 ## Licensing
 
