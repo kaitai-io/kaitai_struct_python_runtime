@@ -31,6 +31,26 @@ class KaitaiStream:
     def pos(self):
         return self._io.tell()
 
+    def size(self):
+        # Python has no internal File object API function to get
+        # current file / StringIO size, thus we use the following
+        # trick.
+        io = self._io
+
+        # Remember our current position
+        cur_pos = io.tell()
+
+        # Seek to the end of the File object
+        io.seek(0, 2)
+
+        # Remember position, which is equal to the full length
+        full_size = io.tell()
+
+        # Seek back to the current position
+        io.seek(cur_pos)
+
+        return full_size
+
     # ========================================================================
     # Integer numbers
     # ========================================================================
