@@ -150,7 +150,10 @@ class KaitaiStream:
     # ========================================================================
 
     def read_bytes(self, n):
-        return self._io.read(n)
+        r = self._io.read(n)
+        if len(r) < n:
+            raise EOFError("requested %d bytes, but got only %d bytes", n, len(r))
+        return r
 
     def read_bytes_full(self):
         return self._io.read()
