@@ -6,6 +6,10 @@ class KaitaiStruct:
     def __init__(self, _io):
         self._io = _io
 
+    @classmethod
+    def from_file(cls, filename):
+        return cls(KaitaiStream(open(filename, 'rb')))
+
 
 class KaitaiStream:
     def __init__(self, _io):
