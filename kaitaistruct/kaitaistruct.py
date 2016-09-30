@@ -167,14 +167,13 @@ class KaitaiStream:
         return self._io.read()
 
     def ensure_fixed_contents(self, size, expected):
-        buf = self._io.read(size)
-        actual = array.array('B', buf)
+        actual = self._io.read(size)
         if actual != expected:
             raise Exception(
                 "Unexpected fixed contents: got %s, was waiting for %s" %
                 (str(actual), str(expected))
             )
-        return buf
+        return actual
 
     # ========================================================================
     # Strings
