@@ -1,6 +1,12 @@
 from struct import unpack
 import array
 
+try:
+    import cStringIO
+    BytesIO = cStringIO.StringIO
+except ImportError:
+    from io import BytesIO
+
 
 class KaitaiStruct:
     def __init__(self, _io):
@@ -244,3 +250,11 @@ class KaitaiStream:
         for i in xrange(len(r)):
             r[i] = (r[i] << amount) & 0xff | (r[i] >> anti_amount)
         return r.tostring()
+
+    # ========================================================================
+    # Python-specific helper methods
+    # ========================================================================
+
+    @staticmethod
+    def bytes_io(data):
+        return BytesIO(data)
