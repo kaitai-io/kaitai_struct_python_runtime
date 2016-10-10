@@ -250,11 +250,3 @@ class KaitaiStream:
         for i in range(len(r)):
             r[i] = (r[i] << amount) & 0xff | (r[i] >> anti_amount)
         return r.tostring()
-
-    # ========================================================================
-    # Python-specific helper methods
-    # ========================================================================
-
-    @staticmethod
-    def bytes_io(data):
-        return BytesIO(data)
