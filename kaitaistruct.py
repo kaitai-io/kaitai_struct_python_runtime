@@ -202,13 +202,13 @@ class KaitaiStream:
                         (term)
                     )
                 else:
-                    return r
+                    return r.decode(encoding)
             elif ord(c) == term:
                 if include_term:
                     r += c
                 if not consume_term:
                     self._io.seek(self._io.tell() - 1)
-                return r
+                return r.decode(encoding)
             else:
                 r += c
 
