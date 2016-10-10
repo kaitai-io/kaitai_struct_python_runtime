@@ -219,7 +219,7 @@ class KaitaiStream:
     @staticmethod
     def process_xor_one(data, key):
         r = array.array('B', data)
-        for i in xrange(len(r)):
+        for i in range(len(r)):
             r[i] ^= key
         return r.tostring()
 
@@ -228,7 +228,7 @@ class KaitaiStream:
         r = array.array('B', data)
         ki = 0
         kl = len(key)
-        for i in xrange(len(r)):
+        for i in range(len(r)):
             r[i] ^= ord(key[ki])
             ki += 1
             if ki >= kl:
@@ -247,7 +247,7 @@ class KaitaiStream:
         anti_amount = -amount & mask
 
         r = array.array('B', data)
-        for i in xrange(len(r)):
+        for i in range(len(r)):
             r[i] = (r[i] << amount) & 0xff | (r[i] >> anti_amount)
         return r.tostring()
 
