@@ -31,7 +31,7 @@ class KaitaiStream:
     def is_eof(self):
         io = self._io
         t = io.read(1)
-        if t == '':
+        if t == b'':
             return True
         else:
             io.seek(io.tell() - 1)
@@ -192,10 +192,10 @@ class KaitaiStream:
         return self._io.read(size).decode(encoding)
 
     def read_strz(self, encoding, term, include_term, consume_term, eos_error):
-        r = ''
+        r = b''
         while True:
             c = self._io.read(1)
-            if c == '':
+            if c == b'':
                 if eos_error:
                     raise Exception(
                         "End of stream reached, but no terminator %d found" %
