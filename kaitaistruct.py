@@ -8,17 +8,26 @@ except ImportError:
 
 
 class KaitaiStruct:
-    def __init__(self, _io):
-        self._io = _io
+    def __init__(self, stream):
+        self._io = stream
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args, **kwargs):
+        self.close()
 
     @classmethod
     def from_file(cls, filename):
         return cls(KaitaiStream(open(filename, 'rb')))
 
+    def close(self):
+        self._io.close()
+
 
 class KaitaiStream:
-    def __init__(self, _io):
-        self._io = _io
+    def __init__(self, io):
+        self._io = io
 
     def close(self):
         self._io.close()
