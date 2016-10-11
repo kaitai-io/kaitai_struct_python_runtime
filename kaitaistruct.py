@@ -1,5 +1,4 @@
 from struct import unpack
-import array
 
 try:
     import cStringIO
@@ -218,22 +217,23 @@ class KaitaiStream:
 
     @staticmethod
     def process_xor_one(data, key):
-        r = array.array('B', data)
+        r = bytearray(data)
         for i in range(len(r)):
             r[i] ^= key
-        return r.tostring()
+        return bytes(r)
 
     @staticmethod
     def process_xor_many(data, key):
-        r = array.array('B', data)
+        r = bytearray(data)
+        k = bytearray(key)
         ki = 0
-        kl = len(key)
+        kl = len(k)
         for i in range(len(r)):
-            r[i] ^= ord(key[ki])
+            r[i] ^= k[ki]
             ki += 1
             if ki >= kl:
                 ki = 0
-        return r.tostring()
+        return bytes(r)
 
     @staticmethod
     def process_rotate_left(data, amount, group_size):
@@ -246,7 +246,7 @@ class KaitaiStream:
         mask = group_size * 8 - 1
         anti_amount = -amount & mask
 
-        r = array.array('B', data)
+        r = bytearray(data)
         for i in range(len(r)):
             r[i] = (r[i] << amount) & 0xff | (r[i] >> anti_amount)
-        return r.tostring()
+        return bytes(r)
