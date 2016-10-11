@@ -232,11 +232,23 @@ class KaitaiStream:
 
     @staticmethod
     def process_xor_one(data, key):
-        return bytes(bytearray(v ^ key for v in bytearray(data)))
+        r = bytearray(data)
+        for i in range(len(r)):
+            r[i] ^= key
+        return bytes(r)
 
     @staticmethod
     def process_xor_many(data, key):
-        return bytes(bytearray(a ^ b for a, b in map(bytearray, zip(data, key))))
+        r = bytearray(data)
+        k = bytearray(key)
+        ki = 0
+        kl = len(k)
+        for i in range(len(r)):
+            r[i] ^= k[ki]
+            ki += 1
+            if ki >= kl:
+                ki = 0
+        return bytes(r)
 
     @staticmethod
     def process_rotate_left(data, amount, group_size):
