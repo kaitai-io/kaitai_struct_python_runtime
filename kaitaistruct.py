@@ -29,6 +29,12 @@ class KaitaiStream:
     def __init__(self, io):
         self._io = io
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args, **kwargs):
+        self.close()
+
     def close(self):
         self._io.close()
 
