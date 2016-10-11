@@ -258,7 +258,7 @@ class KaitaiStream:
                     ki = 0
             return bytes(r)
         else:
-            bytes(a ^ b for a, b in zip(data, itertools.cycle(key)))
+            return bytes(a ^ b for a, b in zip(data, itertools.cycle(key)))
 
     @staticmethod
     def process_rotate_left(data, amount, group_size):
