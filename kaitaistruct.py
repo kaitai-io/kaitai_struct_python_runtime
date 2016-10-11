@@ -1,3 +1,5 @@
+import itertools
+import sys
 from struct import unpack
 
 try:
@@ -5,6 +7,8 @@ try:
     BytesIO = cStringIO.StringIO
 except ImportError:
     from io import BytesIO  # noqa
+
+PY2 = sys.version_info[0] == 2
 
 
 class KaitaiStruct:
@@ -232,23 +236,29 @@ class KaitaiStream:
 
     @staticmethod
     def process_xor_one(data, key):
-        r = bytearray(data)
-        for i in range(len(r)):
-            r[i] ^= key
-        return bytes(r)
+        if PY2:
+            r = bytearray(data)
+            for i in range(len(r)):
+                r[i] ^= key
+            return bytes(r)
+        else:
+            return bytes(v ^ key for v in data)
 
     @staticmethod
     def process_xor_many(data, key):
-        r = bytearray(data)
-        k = bytearray(key)
-        ki = 0
-        kl = len(k)
-        for i in range(len(r)):
-            r[i] ^= k[ki]
-            ki += 1
-            if ki >= kl:
-                ki = 0
-        return bytes(r)
+        if PY2:
+            r = bytearray(data)
+            k = bytearray(key)
+            ki = 0
+            kl = len(k)
+            for i in range(len(r)):
+                r[i] ^= k[ki]
+                ki += 1
+                if ki >= kl:
+                    ki = 0
+            return bytes(r)
+        else:
+            bytes(a ^ b for a, b in zip(data, itertools.cycle(key)))
 
     @staticmethod
     def process_rotate_left(data, amount, group_size):
