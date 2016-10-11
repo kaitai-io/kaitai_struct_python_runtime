@@ -5,7 +5,7 @@ try:
     import cStringIO
     BytesIO = cStringIO.StringIO
 except ImportError:
-    from io import BytesIO
+    from io import BytesIO  # noqa
 
 
 class KaitaiStruct:
