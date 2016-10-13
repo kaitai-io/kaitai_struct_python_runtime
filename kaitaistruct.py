@@ -23,7 +23,13 @@ class KaitaiStruct:
 
     @classmethod
     def from_file(cls, filename):
-        return cls(KaitaiStream(open(filename, 'rb')))
+        file = open(filename, 'rb')
+        try:
+            return cls(KaitaiStream(file))
+        except Exception:
+            # close file descriptor, then reraise the exception
+            file.close()
+            raise
 
     def close(self):
         self._io.close()
