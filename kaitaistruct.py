@@ -23,12 +23,12 @@ class KaitaiStruct:
 
     @classmethod
     def from_file(cls, filename):
-        file = open(filename, 'rb')
+        f = open(filename, 'rb')
         try:
-            return cls(KaitaiStream(file))
+            return cls(KaitaiStream(f))
         except Exception:
             # close file descriptor, then reraise the exception
-            file.close()
+            f.close()
             raise
 
     def close(self):
