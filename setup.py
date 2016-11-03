@@ -1,7 +1,8 @@
 from setuptools import setup
+from io import open
 
-with open('README.md') as f:
-    long_description = f.read().decode('utf-8')
+with open('README.md', encoding='utf-8') as f:
+    long_description = f.read()
 
 setup(
     name='kaitaistruct',
