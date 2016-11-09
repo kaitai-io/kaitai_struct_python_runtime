@@ -6,7 +6,7 @@ with open('README.md', encoding='utf-8') as f:
 
 setup(
     name='kaitaistruct',
-    version='0.4.11',
+    version='0.5',
     description='Kaitai Struct declarative parser generator for binary data: runtime library for Python',
     long_description=long_description,
     url='http://kaitai.io',
