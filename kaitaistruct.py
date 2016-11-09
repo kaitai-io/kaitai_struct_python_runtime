@@ -96,66 +96,66 @@ class KaitaiStream:
     # ------------------------------------------------------------------------
 
     def read_s1(self):
-        return unpack('b', self._io.read(1))[0]
+        return unpack('b', self.read_bytes(1))[0]
 
     # ........................................................................
     # Big-endian
     # ........................................................................
 
     def read_s2be(self):
-        return unpack('>h', self._io.read(2))[0]
+        return unpack('>h', self.read_bytes(2))[0]
 
     def read_s4be(self):
-        return unpack('>i', self._io.read(4))[0]
+        return unpack('>i', self.read_bytes(4))[0]
 
     def read_s8be(self):
-        return unpack('>q', self._io.read(8))[0]
+        return unpack('>q', self.read_bytes(8))[0]
 
     # ........................................................................
     # Little-endian
     # ........................................................................
 
     def read_s2le(self):
-        return unpack('<h', self._io.read(2))[0]
+        return unpack('<h', self.read_bytes(2))[0]
 
     def read_s4le(self):
-        return unpack('<i', self._io.read(4))[0]
+        return unpack('<i', self.read_bytes(4))[0]
 
     def read_s8le(self):
-        return unpack('<q', self._io.read(8))[0]
+        return unpack('<q', self.read_bytes(8))[0]
 
     # ------------------------------------------------------------------------
     # Unsigned
     # ------------------------------------------------------------------------
 
     def read_u1(self):
-        return unpack('B', self._io.read(1))[0]
+        return unpack('B', self.read_bytes(1))[0]
 
     # ........................................................................
     # Big-endian
     # ........................................................................
 
     def read_u2be(self):
-        return unpack('>H', self._io.read(2))[0]
+        return unpack('>H', self.read_bytes(2))[0]
 
     def read_u4be(self):
-        return unpack('>I', self._io.read(4))[0]
+        return unpack('>I', self.read_bytes(4))[0]
 
     def read_u8be(self):
-        return unpack('>Q', self._io.read(8))[0]
+        return unpack('>Q', self.read_bytes(8))[0]
 
     # ........................................................................
     # Little-endian
     # ........................................................................
 
     def read_u2le(self):
-        return unpack('<H', self._io.read(2))[0]
+        return unpack('<H', self.read_bytes(2))[0]
 
     def read_u4le(self):
-        return unpack('<I', self._io.read(4))[0]
+        return unpack('<I', self.read_bytes(4))[0]
 
     def read_u8le(self):
-        return unpack('<Q', self._io.read(8))[0]
+        return unpack('<Q', self.read_bytes(8))[0]
 
     # ========================================================================
     # Floating point numbers
@@ -166,20 +166,20 @@ class KaitaiStream:
     # ........................................................................
 
     def read_f4be(self):
-        return unpack('>f', self._io.read(4))[0]
+        return unpack('>f', self.read_bytes(4))[0]
 
     def read_f8be(self):
-        return unpack('>d', self._io.read(8))[0]
+        return unpack('>d', self.read_bytes(8))[0]
 
     # ........................................................................
     # Little-endian
     # ........................................................................
 
     def read_f4le(self):
-        return unpack('<f', self._io.read(4))[0]
+        return unpack('<f', self.read_bytes(4))[0]
 
     def read_f8le(self):
-        return unpack('<d', self._io.read(8))[0]
+        return unpack('<d', self.read_bytes(8))[0]
 
     # ========================================================================
     # Byte arrays
@@ -213,7 +213,7 @@ class KaitaiStream:
         return self._io.read().decode(encoding)
 
     def read_str_byte_limit(self, size, encoding):
-        return self._io.read(size).decode(encoding)
+        return self.read_bytes(size).decode(encoding)
 
     def read_strz(self, encoding, term, include_term, consume_term, eos_error):
         r = b''
