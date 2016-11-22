@@ -196,8 +196,8 @@ class KaitaiStream:
     def read_bytes_full(self):
         return self._io.read()
 
-    def ensure_fixed_contents(self, size, expected):
-        actual = self._io.read(size)
+    def ensure_fixed_contents(self, expected):
+        actual = self._io.read(len(expected))
         if actual != expected:
             raise Exception(
                 "Unexpected fixed contents: got %s, was waiting for %s" %
