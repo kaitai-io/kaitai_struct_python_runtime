@@ -11,7 +11,7 @@ except ImportError:
 PY2 = sys.version_info[0] == 2
 
 
-class KaitaiStruct:
+class KaitaiStruct(object):
     def __init__(self, stream):
         self._io = stream
 
@@ -35,7 +35,7 @@ class KaitaiStruct:
         self._io.close()
 
 
-class KaitaiStream:
+class KaitaiStream(object):
     def __init__(self, io):
         self._io = io
 
@@ -189,7 +189,7 @@ class KaitaiStream:
         r = self._io.read(n)
         if len(r) < n:
             raise EOFError(
-                "requested %d bytes, but got only %d bytes", n, len(r)
+                "requested %d bytes, but got only %d bytes" % (n, len(r))
             )
         return r
 
@@ -223,7 +223,7 @@ class KaitaiStream:
                 if eos_error:
                     raise Exception(
                         "End of stream reached, but no terminator %d found" %
-                        (term)
+                        (term,)
                     )
                 else:
                     return r.decode(encoding)
@@ -271,7 +271,7 @@ class KaitaiStream:
         if group_size != 1:
             raise Exception(
                 "unable to rotate group of %d bytes yet" %
-                (group_size)
+                (group_size,)
             )
 
         mask = group_size * 8 - 1
