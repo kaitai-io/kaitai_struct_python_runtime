@@ -11,7 +11,7 @@ except ImportError:
 PY2 = sys.version_info[0] == 2
 
 
-class KaitaiStruct:
+class KaitaiStruct(object):
     def __init__(self, stream):
         self._io = stream
 
@@ -35,7 +35,7 @@ class KaitaiStruct:
         self._io.close()
 
 
-class KaitaiStream:
+class KaitaiStream(object):
     def __init__(self, io):
         self._io = io
 
