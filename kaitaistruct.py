@@ -38,6 +38,8 @@ class KaitaiStruct:
 class KaitaiStream:
     def __init__(self, io):
         self._io = io
+        self.bits_left = 0
+        self.bits = 0
 
     def __enter__(self):
         return self
@@ -180,6 +182,42 @@ class KaitaiStream:
 
     def read_f8le(self):
         return unpack('<d', self.read_bytes(8))[0]
+
+    # ========================================================================
+    # Unaligned bit values
+    # ========================================================================
+
+    def read_bits_int(self, n):
+        bits_needed = n - self.bits_left
+        if bits_needed > 0:
+            # 1 bit  => 1 byte
+            # 8 bits => 1 byte
+            # 9 bits => 2 bytes
+            bytes_needed = ((bits_needed - 1) // 8) + 1
+            buf = self.read_bytes(bytes_needed)
+            for byte in buf:
+                # Python 2 will get "byte" as one-character str, thus
+                # we need to convert it to integer manually; Python 3
+                # is fine as is.
+                if type(byte) == str:
+                    byte = ord(byte)
+                self.bits <<= 8
+                self.bits |= byte
+                self.bits_left += 8
+
+        # raw mask with required number of 1s, starting from lowest bit
+        mask = (1 << n) - 1
+        # shift mask to align with highest bits available in self.bits
+        shift_bits = self.bits_left - n
+        mask <<= shift_bits
+        # derive reading result
+        res = (self.bits & mask) >> shift_bits
+        # clear top bits that we've just read => AND with 1s
+        self.bits_left -= n
+        mask = (1 << self.bits_left) - 1
+        self.bits &= mask
+
+        return res
 
     # ========================================================================
     # Byte arrays
