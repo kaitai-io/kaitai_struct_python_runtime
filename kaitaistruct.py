@@ -199,7 +199,7 @@ class KaitaiStream(object):
                 # Python 2 will get "byte" as one-character str, thus
                 # we need to convert it to integer manually; Python 3
                 # is fine as is.
-                if type(byte) == str:
+                if isinstance(byte, str):
                     byte = ord(byte)
                 self.bits <<= 8
                 self.bits |= byte
