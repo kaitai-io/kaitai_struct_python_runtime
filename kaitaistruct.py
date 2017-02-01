@@ -38,8 +38,7 @@ class KaitaiStruct(object):
 class KaitaiStream(object):
     def __init__(self, io):
         self._io = io
-        self.bits_left = 0
-        self.bits = 0
+        self.align_to_byte()
 
     def __enter__(self):
         return self
@@ -186,6 +185,10 @@ class KaitaiStream(object):
     # ========================================================================
     # Unaligned bit values
     # ========================================================================
+
+    def align_to_byte(self):
+        self.bits = 0
+        self.bits_left = 0
 
     def read_bits_int(self, n):
         bits_needed = n - self.bits_left
