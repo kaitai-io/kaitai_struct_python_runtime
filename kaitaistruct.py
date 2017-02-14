@@ -267,6 +267,36 @@ class KaitaiStream(object):
             )
         return actual
 
+    @staticmethod
+    def bytes_strip_right(bytes, pad_byte):
+        new_len = len(bytes)
+        if PY2:
+            data = bytearray(bytes)
+        else:
+            data = bytes
+
+        while data[new_len - 1] == pad_byte:
+            new_len -= 1
+
+        return data[:new_len]
+
+    @staticmethod
+    def bytes_terminate(bytes, term, include_term):
+        new_len = 0
+        max_len = len(bytes)
+        if PY2:
+            data = bytearray(bytes)
+        else:
+            data = bytes
+
+        while new_len < max_len and data[new_len] != term:
+            new_len += 1
+
+        if include_term and new_len < max_len:
+            new_len += 1
+
+        return data[:new_len]
+
     # ========================================================================
     # Byte array processing
     # ========================================================================
