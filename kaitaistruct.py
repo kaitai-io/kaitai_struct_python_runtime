@@ -237,26 +237,7 @@ class KaitaiStream(object):
     def read_bytes_full(self):
         return self._io.read()
 
-    def ensure_fixed_contents(self, expected):
-        actual = self._io.read(len(expected))
-        if actual != expected:
-            raise Exception(
-                "Unexpected fixed contents: got %s, was waiting for %s" %
-                (str(actual), str(expected))
-            )
-        return actual
-
-    # ========================================================================
-    # Strings
-    # ========================================================================
-
-    def read_str_eos(self, encoding):
-        return self._io.read().decode(encoding)
-
-    def read_str_byte_limit(self, size, encoding):
-        return self.read_bytes(size).decode(encoding)
-
-    def read_strz(self, encoding, term, include_term, consume_term, eos_error):
+    def read_bytes_term(self, term, include_term, consume_term, eos_error):
         r = b''
         while True:
             c = self._io.read(1)
@@ -267,15 +248,24 @@ class KaitaiStream(object):
                         (term,)
                     )
                 else:
-                    return r.decode(encoding)
+                    return r
             elif ord(c) == term:
                 if include_term:
                     r += c
                 if not consume_term:
                     self._io.seek(self._io.tell() - 1)
-                return r.decode(encoding)
+                return r
             else:
                 r += c
+
+    def ensure_fixed_contents(self, expected):
+        actual = self._io.read(len(expected))
+        if actual != expected:
+            raise Exception(
+                "Unexpected fixed contents: got %s, was waiting for %s" %
+                (str(actual), str(expected))
+            )
+        return actual
 
     # ========================================================================
     # Byte array processing
