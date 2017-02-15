@@ -19,6 +19,7 @@ PY2 = sys.version_info[0] == 2
 #
 __version__ = '0.7'
 
+
 class KaitaiStruct(object):
     def __init__(self, stream):
         self._io = stream
