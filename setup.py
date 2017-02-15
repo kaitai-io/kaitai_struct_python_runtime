@@ -1,12 +1,13 @@
 from setuptools import setup
 from io import open
+from kaitaistruct import __version__
 
 with open('README.md', encoding='utf-8') as f:
     long_description = f.read()
 
 setup(
     name='kaitaistruct',
-    version='0.6',
+    version=__version__,
     description='Kaitai Struct declarative parser generator for binary data: runtime library for Python',
     long_description=long_description,
     url='http://kaitai.io',
