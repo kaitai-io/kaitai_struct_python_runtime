@@ -15,9 +15,9 @@ format, which then can be compiled into a wide range of target languages.
 
 Further reading:
 
-* [About Kaitai Struct](https://github.com/kaitai-io/kaitai_struct/)
-* [About API implemented in this library](https://github.com/kaitai-io/kaitai_struct/wiki/Kaitai-Struct-stream-API)
-* [Python-specific notes](https://github.com/kaitai-io/kaitai_struct/wiki/Python)
+* [About Kaitai Struct](http://kaitai.io/)
+* [About API implemented in this library](http://doc.kaitai.io/stream_api.html)
+* [Python-specific notes](http://doc.kaitai.io/lang_python.html)
 
 ## Installing
 
