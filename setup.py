@@ -37,6 +37,7 @@ setup(
         'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
     ],
     keywords='kaitai,struct,ksy,declarative,data structure,data format,file format,packet format,binary,parser,parsing,unpack,development',
     py_modules=["kaitaistruct"]
