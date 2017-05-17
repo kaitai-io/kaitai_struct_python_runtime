@@ -37,7 +37,11 @@ setup(
         'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7'
     ],
     keywords='kaitai,struct,ksy,declarative,data structure,data format,file format,packet format,binary,parser,parsing,unpack,development',
-    py_modules=["kaitaistruct"]
+    py_modules=["kaitaistruct"],
+    extras_require = {'improved performance':['bind']},
+    dependency_links = ["git+https://github.com/KOLANICH/bind.py.git"]
 )

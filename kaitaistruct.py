@@ -3,6 +3,14 @@ import sys
 from struct import unpack
 
 try:
+    from bind import bind
+except:
+    def bind(**kwargs):
+        def identity(f):
+            return f
+        return identity
+
+try:
     import cStringIO
     BytesIO = cStringIO.StringIO
 except ImportError:
@@ -43,8 +51,89 @@ class KaitaiStruct(object):
     def close(self):
         self._io.close()
 
+class Endianness:
+    """Just stores the description of endianness"""
+    def __init__(self, name, char):
+       self.name=name
+       self.char=char
 
-class KaitaiStream(object):
+class KaitaiType:
+    """Represents a type, which can take a finite set of fixed lengths and available to 'struct' module. This class is used to store the info to generate them automatically."""
+    endianessesTable=[
+        Endianness("le", "<"),
+        Endianness("be", ">")
+    ]
+
+    def readFuncFac(fStr, size):
+        @bind(fStr=fStr, size=size)
+        def read(self):
+            return unpack(fStr, self.read_bytes(size))[0]
+        return read
+
+    funcFactories=(readFuncFac,)
+
+    def __init__(self, typeName:str=None, sizesTable:dict=None):
+        self.typeName=typeName # the first letter must identify the type for KS
+        if sizesTable:
+            self.sizesTable=sizesTable
+        else:
+            self.sizesTable={}
+    
+    def makeAccessorFunc(self, size, endianess, factory):
+        fStr="".join((endianess.char, self.sizesTable[size]))
+        func=factory(fStr, size)
+        func.__doc__="".join((
+            func.__name__, "s ",
+            str(size), "-byte ",
+            endianess.name, " ", self.typeName, "s"
+        ))
+        func.__name__="".join((func.__name__,"_", self.typeName[0], str(size), endianess.name))
+        return func
+    
+    def generateAccessorFunctions(self):
+        for endianness in self.endianessesTable:
+            for size in self.sizesTable.keys():
+                for fac in self.funcFactories:
+                    yield self.makeAccessorFunc(size, endianness, fac)
+    
+default_types_table={
+    KaitaiType(
+        "unsigned int",
+        {
+            1: "B",
+            2: "H",
+            4: "I",
+            8: "Q",
+        }
+    ),
+    KaitaiType(
+        "signed int",
+        {
+            1: "b",
+            2: "h",
+            4: "i",
+            8: "q",
+        }
+    ),
+    KaitaiType(
+        "float",
+        {
+            4: "f",
+            8: "d",
+        }
+    )
+}
+
+def _kaitai_stream(name, parents, attrs):
+    """A metaclass to generate properties for KaitaiStream classes"""
+    if "types_table" not in attrs:
+        attrs["types_table"]=default_types_table
+    for t in attrs["types_table"]:
+        for func in t.generateAccessorFunctions():
+            attrs[func.__name__]=func
+    return type(name, parents, attrs)
+
+class KaitaiStream(metaclass=_kaitai_stream):
     def __init__(self, io):
         self._io = io
         self.align_to_byte()
@@ -96,101 +185,7 @@ class KaitaiStream(object):
         io.seek(cur_pos)
 
         return full_size
-
-    # ========================================================================
-    # Integer numbers
-    # ========================================================================
-
-    # ------------------------------------------------------------------------
-    # Signed
-    # ------------------------------------------------------------------------
-
-    def read_s1(self):
-        return unpack('b', self.read_bytes(1))[0]
-
-    # ........................................................................
-    # Big-endian
-    # ........................................................................
-
-    def read_s2be(self):
-        return unpack('>h', self.read_bytes(2))[0]
-
-    def read_s4be(self):
-        return unpack('>i', self.read_bytes(4))[0]
-
-    def read_s8be(self):
-        return unpack('>q', self.read_bytes(8))[0]
-
-    # ........................................................................
-    # Little-endian
-    # ........................................................................
-
-    def read_s2le(self):
-        return unpack('<h', self.read_bytes(2))[0]
-
-    def read_s4le(self):
-        return unpack('<i', self.read_bytes(4))[0]
-
-    def read_s8le(self):
-        return unpack('<q', self.read_bytes(8))[0]
-
-    # ------------------------------------------------------------------------
-    # Unsigned
-    # ------------------------------------------------------------------------
-
-    def read_u1(self):
-        return unpack('B', self.read_bytes(1))[0]
-
-    # ........................................................................
-    # Big-endian
-    # ........................................................................
-
-    def read_u2be(self):
-        return unpack('>H', self.read_bytes(2))[0]
-
-    def read_u4be(self):
-        return unpack('>I', self.read_bytes(4))[0]
-
-    def read_u8be(self):
-        return unpack('>Q', self.read_bytes(8))[0]
-
-    # ........................................................................
-    # Little-endian
-    # ........................................................................
-
-    def read_u2le(self):
-        return unpack('<H', self.read_bytes(2))[0]
-
-    def read_u4le(self):
-        return unpack('<I', self.read_bytes(4))[0]
-
-    def read_u8le(self):
-        return unpack('<Q', self.read_bytes(8))[0]
-
-    # ========================================================================
-    # Floating point numbers
-    # ========================================================================
-
-    # ........................................................................
-    # Big-endian
-    # ........................................................................
-
-    def read_f4be(self):
-        return unpack('>f', self.read_bytes(4))[0]
-
-    def read_f8be(self):
-        return unpack('>d', self.read_bytes(8))[0]
-
-    # ........................................................................
-    # Little-endian
-    # ........................................................................
-
-    def read_f4le(self):
-        return unpack('<f', self.read_bytes(4))[0]
-
-    def read_f8le(self):
-        return unpack('<d', self.read_bytes(8))[0]
-
+    
     # ========================================================================
     # Unaligned bit values
     # ========================================================================
