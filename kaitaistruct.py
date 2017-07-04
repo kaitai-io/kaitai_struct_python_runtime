@@ -284,7 +284,7 @@ class KaitaiStream(object):
         else:
             data = src
 
-        while data[new_len - 1] == pad_byte:
+        while new_len > 0 and data[new_len - 1] == pad_byte:
             new_len -= 1
 
         return data[:new_len]
