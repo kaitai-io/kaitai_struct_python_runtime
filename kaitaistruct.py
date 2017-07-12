@@ -40,6 +40,14 @@ class KaitaiStruct(object):
             f.close()
             raise
 
+    @classmethod
+    def from_bytes(cls, buf):
+        return cls(KaitaiStream(BytesIO(buf)))
+
+    @classmethod
+    def from_io(cls, io):
+        return cls(KaitaiStream(io))
+
     def close(self):
         self._io.close()
 
