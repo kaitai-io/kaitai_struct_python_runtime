@@ -247,7 +247,8 @@ class KaitaiStream(object):
         r = self._io.read(n)
         if len(r) < n:
             raise EOFError(
-                "requested %d bytes, but got only %d bytes" % (n, len(r))
+                "requested %d bytes, but got only %d bytes" %
+                (n, len(r))
             )
         return r
 
@@ -261,7 +262,7 @@ class KaitaiStream(object):
             if c == b'':
                 if eos_error:
                     raise Exception(
-                        "End of stream reached, but no terminator %d found" %
+                        "end of stream reached, but no terminator %d found" %
                         (term,)
                     )
                 else:
@@ -279,7 +280,7 @@ class KaitaiStream(object):
         actual = self._io.read(len(expected))
         if actual != expected:
             raise Exception(
-                "Unexpected fixed contents: got %s, was waiting for %s" %
+                "unexpected fixed contents: got %s, was waiting for %s" %
                 (str(actual), str(expected))
             )
         return actual
