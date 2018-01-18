@@ -1,12 +1,7 @@
 import itertools
 import sys
 from struct import unpack
-
-try:
-    import cStringIO
-    BytesIO = cStringIO.StringIO
-except ImportError:
-    from io import BytesIO  # noqa
+from io import BytesIO  # noqa
 
 PY2 = sys.version_info[0] == 2
 
