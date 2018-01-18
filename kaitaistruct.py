@@ -307,28 +307,16 @@ class KaitaiStream(object):
     @staticmethod
     def process_xor_one(data, key):
         if PY2:
-            r = bytearray(data)
-            for i in range(len(r)):
-                r[i] ^= key
-            return bytes(r)
+            return bytes(''.join(chr(ord(v)^key) for v in data))
         else:
-            return bytes(v ^ key for v in data)
+            return bytes(v^key for v in data)
 
     @staticmethod
     def process_xor_many(data, key):
         if PY2:
-            r = bytearray(data)
-            k = bytearray(key)
-            ki = 0
-            kl = len(k)
-            for i in range(len(r)):
-                r[i] ^= k[ki]
-                ki += 1
-                if ki >= kl:
-                    ki = 0
-            return bytes(r)
+            return bytes(''.join(chr(ord(a)^ord(b)) for a,b in zip(data, itertools.cycle(key))))
         else:
-            return bytes(a ^ b for a, b in zip(data, itertools.cycle(key)))
+            return bytes(a^b for a,b in zip(data, itertools.cycle(key)))
 
     @staticmethod
     def process_rotate_left(data, amount, group_size):
