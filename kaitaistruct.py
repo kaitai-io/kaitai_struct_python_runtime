@@ -25,15 +25,13 @@ class KaitaiStruct(object):
     def __exit__(self, *args, **kwargs):
         self.close()
 
+    def close(self):
+        self._io.close()
+
     @classmethod
     def from_file(cls, filename):
-        f = open(filename, 'rb')
-        try:
+        with open(filename, 'rb') as f:
             return cls(KaitaiStream(f))
-        except Exception:
-            # close file descriptor, then reraise the exception
-            f.close()
-            raise
 
     @classmethod
     def from_bytes(cls, buf):
@@ -42,9 +40,6 @@ class KaitaiStruct(object):
     @classmethod
     def from_io(cls, io):
         return cls(KaitaiStream(io))
-
-    def close(self):
-        self._io.close()
 
 
 class KaitaiStream(object):
@@ -85,19 +80,14 @@ class KaitaiStream(object):
         # current file / StringIO size, thus we use the following
         # trick.
         io = self._io
-
         # Remember our current position
         cur_pos = io.tell()
-
         # Seek to the end of the File object
         io.seek(0, 2)
-
         # Remember position, which is equal to the full length
         full_size = io.tell()
-
         # Seek back to the current position
         io.seek(cur_pos)
-
         return full_size
 
     # ========================================================================
@@ -275,8 +265,8 @@ class KaitaiStream(object):
         actual = self._io.read(len(expected))
         if actual != expected:
             raise Exception(
-                "unexpected fixed contents: got %s, was waiting for %s" %
-                (str(actual), str(expected))
+                "unexpected fixed contents: got %r, was waiting for %r" %
+                (actual, expected)
             )
         return actual
 
