@@ -239,6 +239,11 @@ class KaitaiStream(object):
     # ========================================================================
 
     def read_bytes(self, n):
+        if n < 0:
+            raise ValueError(
+                "requested invalid %d amount of bytes" %
+                (n,)
+            )
         r = self._io.read(n)
         if len(r) < n:
             raise EOFError(
