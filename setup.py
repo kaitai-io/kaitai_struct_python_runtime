@@ -2,7 +2,7 @@ from setuptools import setup
 from io import open
 from kaitaistruct import __version__
 
-with open('README.md', encoding='utf-8') as f:
+with open('README.rst', encoding='utf-8') as f:
     long_description = f.read()
 
 setup(
@@ -38,7 +38,10 @@ setup(
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
+        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: Implementation :: CPython",
+        "Programming Language :: Python :: Implementation :: PyPy",
     ],
     keywords='kaitai,struct,ksy,declarative,data structure,data format,file format,packet format,binary,parser,parsing,unpack,development',
-    py_modules=["kaitaistruct"]
+    py_modules=["kaitaistruct"],
 )
