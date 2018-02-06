@@ -30,8 +30,13 @@ class KaitaiStruct(object):
 
     @classmethod
     def from_file(cls, filename):
-        with open(filename, 'rb') as f:
+        f = open(filename, 'rb')
+        try:
             return cls(KaitaiStream(f))
+        except Exception:
+            # close file descriptor, then reraise the exception
+            f.close()
+            raise
 
     @classmethod
     def from_bytes(cls, buf):
