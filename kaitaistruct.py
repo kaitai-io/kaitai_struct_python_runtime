@@ -12,7 +12,7 @@ PY2 = sys.version_info[0] == 2
 #   KS runtime library by this version number;
 # * distribution utils (setup.py) use this when packaging for PyPI
 #
-__version__ = '0.7'
+__version__ = '0.8'
 
 
 class KaitaiStruct(object):
