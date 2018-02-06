@@ -48,7 +48,7 @@ to install the package manually using `pip` Python package manager.
 Licensing
 ------------------------------
 
-Copyright 2015-2017 Kaitai Project: MIT license
+Copyright 2015-2018 Kaitai Project: MIT license
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the
