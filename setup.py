@@ -42,6 +42,6 @@ setup(
         "Programming Language :: Python :: Implementation :: CPython",
         "Programming Language :: Python :: Implementation :: PyPy",
     ],
-    keywords='kaitai,struct,ksy,declarative,data structure,data format,file format,packet format,binary,parser,parsing,unpack,development',
+    keywords='kaitai,struct,construct,ksy,declarative,data structure,data format,file format,packet format,binary,parser,parsing,unpack,development',
     py_modules=["kaitaistruct"],
 )
