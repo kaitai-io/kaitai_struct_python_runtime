@@ -1,5 +1,6 @@
 import itertools
 import sys
+import struct
 from struct import unpack
 from io import BytesIO  # noqa
 
@@ -99,95 +100,116 @@ class KaitaiStream(object):
     # Integer numbers
     # ========================================================================
 
+    packer_s1 = struct.Struct('b')
+    packer_s2be = struct.Struct('>h')
+    packer_s4be = struct.Struct('>i')
+    packer_s8be = struct.Struct('>q')
+    packer_s2le = struct.Struct('<h')
+    packer_s4le = struct.Struct('<i')
+    packer_s8le = struct.Struct('<q')
+
+    packer_u1 = struct.Struct('B')
+    packer_u2be = struct.Struct('>H')
+    packer_u4be = struct.Struct('>I')
+    packer_u8be = struct.Struct('>Q')
+    packer_u2le = struct.Struct('<H')
+    packer_u4le = struct.Struct('<I')
+    packer_u8le = struct.Struct('<Q')
+
     # ------------------------------------------------------------------------
     # Signed
     # ------------------------------------------------------------------------
 
     def read_s1(self):
-        return unpack('b', self.read_bytes(1))[0]
+        return KaitaiStream.packer_s1.unpack(self.read_bytes(1))[0]
 
     # ........................................................................
     # Big-endian
     # ........................................................................
 
     def read_s2be(self):
-        return unpack('>h', self.read_bytes(2))[0]
+        return KaitaiStream.packer_s2be.unpack(self.read_bytes(2))[0]
 
     def read_s4be(self):
-        return unpack('>i', self.read_bytes(4))[0]
+        return KaitaiStream.packer_s4be.unpack(self.read_bytes(4))[0]
 
     def read_s8be(self):
-        return unpack('>q', self.read_bytes(8))[0]
+        return KaitaiStream.packer_s8be.unpack(self.read_bytes(8))[0]
 
     # ........................................................................
     # Little-endian
     # ........................................................................
 
     def read_s2le(self):
-        return unpack('<h', self.read_bytes(2))[0]
+        return KaitaiStream.packer_s2le.unpack(self.read_bytes(2))[0]
 
     def read_s4le(self):
-        return unpack('<i', self.read_bytes(4))[0]
+        return KaitaiStream.packer_s4le.unpack(self.read_bytes(4))[0]
 
     def read_s8le(self):
-        return unpack('<q', self.read_bytes(8))[0]
+        return KaitaiStream.packer_s8le.unpack(self.read_bytes(8))[0]
 
     # ------------------------------------------------------------------------
     # Unsigned
     # ------------------------------------------------------------------------
 
     def read_u1(self):
-        return unpack('B', self.read_bytes(1))[0]
+        return KaitaiStream.packer_u1.unpack(self.read_bytes(1))[0]
 
     # ........................................................................
     # Big-endian
     # ........................................................................
 
     def read_u2be(self):
-        return unpack('>H', self.read_bytes(2))[0]
+        return KaitaiStream.packer_u2be.unpack(self.read_bytes(2))[0]
 
     def read_u4be(self):
-        return unpack('>I', self.read_bytes(4))[0]
+        return KaitaiStream.packer_u4be.unpack(self.read_bytes(4))[0]
 
     def read_u8be(self):
-        return unpack('>Q', self.read_bytes(8))[0]
+        return KaitaiStream.packer_u8be.unpack(self.read_bytes(8))[0]
 
     # ........................................................................
     # Little-endian
     # ........................................................................
 
     def read_u2le(self):
-        return unpack('<H', self.read_bytes(2))[0]
+        return KaitaiStream.packer_u2le.unpack(self.read_bytes(2))[0]
 
     def read_u4le(self):
-        return unpack('<I', self.read_bytes(4))[0]
+        return KaitaiStream.packer_u4le.unpack(self.read_bytes(4))[0]
 
     def read_u8le(self):
-        return unpack('<Q', self.read_bytes(8))[0]
+        return KaitaiStream.packer_u8le.unpack(self.read_bytes(8))[0]
 
     # ========================================================================
     # Floating point numbers
     # ========================================================================
+
+    packer_f4be = struct.Struct('>f')
+    packer_f8be = struct.Struct('>d')
+    packer_f4le = struct.Struct('<f')
+    packer_f8le = struct.Struct('<d')
 
     # ........................................................................
     # Big-endian
     # ........................................................................
 
     def read_f4be(self):
-        return unpack('>f', self.read_bytes(4))[0]
+        return KaitaiStream.packer_f4be.unpack(self.read_bytes(4))[0]
 
     def read_f8be(self):
-        return unpack('>d', self.read_bytes(8))[0]
+        return KaitaiStream.packer_f8be.unpack(self.read_bytes(8))[0]
 
     # ........................................................................
     # Little-endian
     # ........................................................................
 
     def read_f4le(self):
-        return unpack('<f', self.read_bytes(4))[0]
+        return KaitaiStream.packer_f4le.unpack(self.read_bytes(4))[0]
 
     def read_f8le(self):
-        return unpack('<d', self.read_bytes(8))[0]
+        return KaitaiStream.packer_f8le.unpack(self.read_bytes(8))[0]
 
     # ========================================================================
     # Unaligned bit values
