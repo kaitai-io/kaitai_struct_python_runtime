@@ -2,6 +2,7 @@ import itertools
 import sys
 import struct
 from io import open, BytesIO, SEEK_CUR, SEEK_END  # noqa
+from reprlib import Repr, recursive_repr
 
 PY2 = sys.version_info[0] == 2
 
@@ -23,6 +24,17 @@ API_VERSION = (0, 10)
 # pylint: disable=invalid-name,missing-docstring,too-many-public-methods
 # pylint: disable=useless-object-inheritance,super-with-arguments,consider-using-f-string
 
+reprer = Repr()
+reprer.maxother = sys.maxsize * 2 + 1
+
+@recursive_repr()
+def repr_generator_for_all_props(self):
+    """Generator to use in own __repr__ functions."""
+    return (
+        "".join(( str(k), "=", reprer.repr(getattr(self, k)) ))
+        for k in dir(self)
+        if k[0] != "_" and not hasattr(KaitaiStruct, k) and not isinstance(getattr(self, k), type)
+    )
 
 class KaitaiStruct(object):
     def __init__(self, stream):
@@ -33,6 +45,16 @@ class KaitaiStruct(object):
 
     def __exit__(self, *args, **kwargs):
         self.close()
+
+    def __repr__(self):
+        return "".join(
+            (
+                self.__class__.__name__,
+                "(",
+                ", ".join( repr_generator_for_all_props(self) ),
+                ")"
+            )
+        )
 
     def close(self):
         self._io.close()
