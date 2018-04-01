@@ -355,18 +355,19 @@ class KaitaiStream(object):
         else:
             return bytes(a ^ b for a, b in zip(data, itertools.cycle(key)))
 
+    # formula taken from: http://stackoverflow.com/a/812039
+    precomputed_rotations = {amount:[(i << amount) & 0xff | (i >> (-amount & 7)) for i in range(256)] for amount in range(8)}
+
     @staticmethod
     def process_rotate_left(data, amount, group_size):
         if group_size != 1:
-            raise Exception(
-                "unable to rotate group of %d bytes yet" %
-                (group_size,)
-            )
+            raise Exception("unable to rotate groups other than 1 byte")
+        amount = amount % 8
+        if amount == 0:
+            return data
 
-        mask = group_size * 8 - 1
-        anti_amount = -amount & mask
-
-        r = bytearray(data)
-        for i in range(len(r)):
-            r[i] = (r[i] << amount) & 0xff | (r[i] >> anti_amount)
-        return bytes(r)
+        translate = KaitaiStream.precomputed_rotations[amount]
+        if PY2:
+            return bytes(bytearray(translate[a] for a in bytearray(data)))
+        else:
+            return bytes(translate[a] for a in data)
