@@ -1,7 +1,6 @@
 import itertools
 import sys
 import struct
-from struct import unpack
 from io import BytesIO  # noqa
 
 PY2 = sys.version_info[0] == 2
