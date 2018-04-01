@@ -335,6 +335,9 @@ class KaitaiStream(object):
 
     @staticmethod
     def process_xor_one(data, key):
+        if key == 0:
+            return data
+
         if PY2:
             return bytes(bytearray(v ^ key for v in bytearray(data)))
         else:
@@ -342,6 +345,11 @@ class KaitaiStream(object):
 
     @staticmethod
     def process_xor_many(data, key):
+        if len(key) == 1:
+            return KaitaiStream.process_xor_one(data, ord(key))
+        if len(key) <= 64 and key == b'\x00' * len(key):
+            return data
+
         if PY2:
             return bytes(bytearray(a ^ b for a, b in zip(bytearray(data), itertools.cycle(bytearray(key)))))
         else:
