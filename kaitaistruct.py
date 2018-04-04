@@ -16,6 +16,7 @@ __version__ = '0.8'
 
 
 if PY2:
+    range = xrange
     def integers2bytes(ints):
         return bytes(bytearray(ints))
     def bytes2integers(data):
@@ -362,15 +363,42 @@ class KaitaiStream(object):
         return integers2bytes(a ^ b for a, b in zip(bytes2integers(data), itertools.cycle(bytes2integers(key))))
 
     # formula taken from: http://stackoverflow.com/a/812039
-    precomputed_rotations = {amount:[(i << amount) & 0xff | (i >> (-amount & 7)) for i in range(256)] for amount in range(8)}
+    precomputed_single_rotations = {amount: [(i << amount) & 0xff | (i >> (8-amount)) for i in range(256)] for amount in range(1,8)}
 
     @staticmethod
     def process_rotate_left(data, amount, group_size):
-        if group_size != 1:
-            raise Exception("unable to rotate groups other than 1 byte")
-        amount = amount % 8
+        if group_size < 1:
+            raise Exception("group size must be at least 1 to be valid")
+
+        amount = amount % (group_size * 8)
         if amount == 0:
             return data
 
-        translate = KaitaiStream.precomputed_rotations[amount]
-        return integers2bytes(translate[a] for a in bytes2integers(data))
+        amount_bytes = amount // 8
+        data_ints = bytes2integers(data)
+
+        if group_size == 1:
+            translate = KaitaiStream.precomputed_single_rotations[amount]
+            return integers2bytes(translate[a] for a in data_ints)
+
+        if len(data) % group_size != 0:
+            raise Exception("data length must be a multiple of group size")
+
+        if amount % 8 == 0:
+            indices = [(i + amount_bytes) % group_size for i in range(group_size)]
+            return integers2bytes(data_ints[i+k] for i in range(0,len(data),group_size) for k in indices)
+
+        amount1 = amount % 8
+        amount2 = 8 - amount1
+        indices_pairs = [ ((i+amount_bytes) % group_size, (i+1+amount_bytes) % group_size) for i in range(group_size)]
+        return integers2bytes((data_ints[i+k1] << amount1) & 0xff | (data_ints[i+k2] >> amount2) for i in range(0,len(data),group_size) for k1,k2 in indices_pairs)
+
+        # NOTE: unused implementation, left for reference
+        # 
+        # cap = (1 << 8 * group_size) - 1
+        # anti_amount = -amount & (8 * group_size - 1)
+        # for i in range(0,len(data),group_size):
+        #     group = bytes2combinedinteger(data[i:i+group_size])
+        #     group = (group << amount) & cap | (group >> anti_amount)
+        #     r.append(combinedinteger2bytes(group, group_size))
+        # return b''.join(r)
