@@ -15,6 +15,18 @@ PY2 = sys.version_info[0] == 2
 __version__ = '0.8'
 
 
+if PY2:
+    def integers2bytes(ints):
+        return bytes(bytearray(ints))
+    def bytes2integers(data):
+        return bytearray(data)
+else:
+    def integers2bytes(ints):
+        return bytes(ints)
+    def bytes2integers(data):
+        return data
+
+
 class KaitaiStruct(object):
     def __init__(self, stream):
         self._io = stream
@@ -338,10 +350,7 @@ class KaitaiStream(object):
         if key == 0:
             return data
 
-        if PY2:
-            return bytes(bytearray(v ^ key for v in bytearray(data)))
-        else:
-            return bytes(v ^ key for v in data)
+        return integers2bytes(v ^ key for v in bytes2integers(data))
 
     @staticmethod
     def process_xor_many(data, key):
@@ -350,10 +359,7 @@ class KaitaiStream(object):
         if len(key) <= 64 and key == b'\x00' * len(key):
             return data
 
-        if PY2:
-            return bytes(bytearray(a ^ b for a, b in zip(bytearray(data), itertools.cycle(bytearray(key)))))
-        else:
-            return bytes(a ^ b for a, b in zip(data, itertools.cycle(key)))
+        return integers2bytes(a ^ b for a, b in zip(bytes2integers(data), itertools.cycle(bytes2integers(key))))
 
     # formula taken from: http://stackoverflow.com/a/812039
     precomputed_rotations = {amount:[(i << amount) & 0xff | (i >> (-amount & 7)) for i in range(256)] for amount in range(8)}
@@ -367,7 +373,4 @@ class KaitaiStream(object):
             return data
 
         translate = KaitaiStream.precomputed_rotations[amount]
-        if PY2:
-            return bytes(bytearray(translate[a] for a in bytearray(data)))
-        else:
-            return bytes(translate[a] for a in data)
+        return integers2bytes(translate[a] for a in bytes2integers(data))
