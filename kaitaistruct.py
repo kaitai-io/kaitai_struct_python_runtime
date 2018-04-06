@@ -50,6 +50,8 @@ class KaitaiStruct(object):
 class KaitaiStream(object):
     def __init__(self, io):
         self._io = io
+        if isinstance(io, BytesIO):
+            self.size_cached = self.size()
         self.align_to_byte()
 
     def __enter__(self):
@@ -81,6 +83,8 @@ class KaitaiStream(object):
         return self._io.tell()
 
     def size(self):
+        if hasattr(self, 'size_cached'):
+            return self.size_cached
         # Python has no internal File object API function to get
         # current file / StringIO size, thus we use the following
         # trick.
