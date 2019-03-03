@@ -363,3 +363,18 @@ class KaitaiStream(object):
         for i in range(len(r)):
             r[i] = (r[i] << amount) & 0xff | (r[i] >> anti_amount)
         return bytes(r)
+
+    # ========================================================================
+    # Misc
+    # ========================================================================
+
+    @staticmethod
+    def resolve_enum(enum_obj, value):
+        """Resolves value using enum: if the value is not found in the map,
+        we'll just use literal value per se. Works around problem with Python
+        enums throwing an exception when encountering unknown value.
+        """
+        try:
+            return enum_obj(value)
+        except ValueError:
+            return value
