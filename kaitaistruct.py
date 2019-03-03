@@ -1,8 +1,7 @@
 import itertools
 import sys
 import struct
-from struct import unpack
-from io import BytesIO  # noqa
+from io import BytesIO, SEEK_CUR, SEEK_END  # noqa
 
 PY2 = sys.version_info[0] == 2
 
@@ -72,7 +71,7 @@ class KaitaiStream(object):
         if t == b'':
             return True
         else:
-            io.seek(io.tell() - 1)
+            io.seek(-1, SEEK_CUR)
             return False
 
     def seek(self, n):
@@ -89,7 +88,7 @@ class KaitaiStream(object):
         # Remember our current position
         cur_pos = io.tell()
         # Seek to the end of the File object
-        io.seek(0, 2)
+        io.seek(0, SEEK_END)
         # Remember position, which is equal to the full length
         full_size = io.tell()
         # Seek back to the current position
@@ -288,7 +287,7 @@ class KaitaiStream(object):
                 if include_term:
                     r += c
                 if not consume_term:
-                    self._io.seek(self._io.tell() - 1)
+                    self._io.seek(-1, SEEK_CUR)
                 return r
             else:
                 r += c
