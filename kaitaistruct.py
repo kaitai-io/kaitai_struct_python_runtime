@@ -12,7 +12,7 @@ PY2 = sys.version_info[0] == 2
 #   KS runtime library by this version number;
 # * distribution utils (setup.py) use this when packaging for PyPI
 #
-__version__ = '0.8'
+__version__ = '0.9'
 
 
 class KaitaiStruct(object):
@@ -66,6 +66,9 @@ class KaitaiStream(object):
     # ========================================================================
 
     def is_eof(self):
+        if self.bits_left > 0:
+            return False
+
         io = self._io
         t = io.read(1)
         if t == b'':
