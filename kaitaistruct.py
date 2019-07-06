@@ -380,3 +380,41 @@ class KaitaiStream(object):
             return enum_obj(value)
         except ValueError:
             return value
+
+
+class KaitaiStructError(BaseException):
+    """Common ancestor for all error originating from Kaitai Struct usage.
+    Stores KSY source path, pointing to an element supposedly guilty of
+    an error.
+    """
+    def __init__(self, msg, src_path):
+        super(KaitaiStructError, self).__init__("%s: %s" % (src_path, msg))
+        self.src_path = src_path
+
+
+class UndecidedEndiannessError(KaitaiStructError):
+    """Error that occurs when default endianness should be decided with
+    switch, but nothing matches (although using endianness expression
+    implies that there should be some positive result).
+    """
+    def __init__(self, src_path):
+        super(KaitaiStructError, self).__init__("unable to decide on endianness for a type", src_path)
+
+
+class ValidationFailedError(KaitaiStructError):
+    """Common ancestor for all validation failures. Stores pointer to
+    KaitaiStream IO object which was involved in an error.
+    """
+    def __init__(self, msg, io, src_path):
+        super(ValidationFailedError, self).__init__("at pos %d: validation failed: %s" % (io.pos(), msg), src_path)
+        self.io = io
+
+
+class ValidationNotEqualError(ValidationFailedError):
+    """Signals validation failure: we required "actual" value to be equal to
+    "expected", but it turned out that it's not.
+    """
+    def __init__(self, expected, actual, io, src_path):
+        super(ValidationNotEqualError, self).__init__("not equal, expected %s, but got %s" % (repr(expected), repr(actual)), io, src_path)
+        self.expected = expected
+        self.actual = actual
