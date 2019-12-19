@@ -418,3 +418,21 @@ class ValidationNotEqualError(ValidationFailedError):
         super(ValidationNotEqualError, self).__init__("not equal, expected %s, but got %s" % (repr(expected), repr(actual)), io, src_path)
         self.expected = expected
         self.actual = actual
+
+class ValidationLessThanError(ValidationFailedError):
+    """Signals validation failure: we required "actual" value to be
+    greater than or equal to "min", but it turned out that it's not.
+    """
+    def __init__(self, min, actual, io, src_path):
+        super(ValidationLessThanError, self).__init__("not in range, min %s, but got %s" % (repr(min), repr(actual)), io, src_path)
+        self.min = min
+        self.actual = actual
+
+class ValidationGreaterThanError(ValidationFailedError):
+    """Signals validation failure: we required "actual" value to be
+    less than or equal to "max", but it turned out that it's not.
+    """
+    def __init__(self, max, actual, io, src_path):
+        super(ValidationGreaterThanError, self).__init__("not in range, max %s, but got %s" % (repr(max), repr(actual)), io, src_path)
+        self.max = max
+        self.actual = actual
