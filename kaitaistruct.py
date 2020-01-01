@@ -1,7 +1,7 @@
 import itertools
 import sys
 import struct
-from io import BytesIO, SEEK_CUR, SEEK_END  # noqa
+from io import open, BytesIO, SEEK_CUR, SEEK_END  # noqa
 
 PY2 = sys.version_info[0] == 2
 
@@ -369,6 +369,24 @@ class KaitaiStream(object):
     # ========================================================================
     # Misc
     # ========================================================================
+
+    @staticmethod
+    def int_from_byte(v):
+        if PY2:
+            return ord(v)
+        return v
+
+    @staticmethod
+    def byte_array_index(data, i):
+        return KaitaiStream.int_from_byte(data[i])
+    
+    @staticmethod
+    def byte_array_min(b):
+        return KaitaiStream.int_from_byte(min(b))
+
+    @staticmethod
+    def byte_array_max(b):
+        return KaitaiStream.int_from_byte(max(b))
 
     @staticmethod
     def resolve_enum(enum_obj, value):
