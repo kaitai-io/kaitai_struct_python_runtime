@@ -371,6 +371,24 @@ class KaitaiStream(object):
     # ========================================================================
 
     @staticmethod
+    def int_from_byte(v):
+        if PY2:
+            return ord(v)
+        return v
+
+    @staticmethod
+    def byte_array_index(data, i):
+        return KaitaiStream.int_from_byte(data[i])
+    
+    @staticmethod
+    def byte_array_min(b):
+        return KaitaiStream.int_from_byte(min(b))
+
+    @staticmethod
+    def byte_array_max(b):
+        return KaitaiStream.int_from_byte(max(b))
+
+    @staticmethod
     def resolve_enum(enum_obj, value):
         """Resolves value using enum: if the value is not found in the map,
         we'll just use literal value per se. Works around problem with Python
