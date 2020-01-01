@@ -1,7 +1,7 @@
 import itertools
 import sys
 import struct
-from io import BytesIO, SEEK_CUR, SEEK_END  # noqa
+from io import open, BytesIO, SEEK_CUR, SEEK_END  # noqa
 
 PY2 = sys.version_info[0] == 2
 
