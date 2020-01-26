@@ -15,32 +15,5 @@ Further reading:
 
 * `About Kaitai Struct <http://kaitai.io/>`_
 * `About API implemented in this library <http://doc.kaitai.io/stream_api.html>`_
-* `Python specific notes <http://doc.kaitai.io/lang_python.html>`_
-
-Installing
-------------------------------
-
-Using `requirements.txt`
-------------------------------
-
-If you want to use Kaitai Struct runtime in your project and you use
-`requirements.txt` to manage your dependencies, just add the following
-line to it:
-
-::
-
-    kaitaistruct
-
-and then run `pip install -r requirements.txt` to update all your
-dependencies.
-
-Using `pip` directly
-------------------------------
-
-You can use
-
-::
-
-    pip install kaitaistruct
-
-to install the package manually using `pip` Python package manager.
+* `Python-specific notes <http://doc.kaitai.io/lang_python.html>`_ in KS
+  documentation discuss installation and usage of this runtime
