@@ -379,7 +379,7 @@ class KaitaiStream(object):
     @staticmethod
     def byte_array_index(data, i):
         return KaitaiStream.int_from_byte(data[i])
-    
+
     @staticmethod
     def byte_array_min(b):
         return KaitaiStream.int_from_byte(min(b))
@@ -437,6 +437,7 @@ class ValidationNotEqualError(ValidationFailedError):
         self.expected = expected
         self.actual = actual
 
+
 class ValidationLessThanError(ValidationFailedError):
     """Signals validation failure: we required "actual" value to be
     greater than or equal to "min", but it turned out that it's not.
@@ -445,6 +446,7 @@ class ValidationLessThanError(ValidationFailedError):
         super(ValidationLessThanError, self).__init__("not in range, min %s, but got %s" % (repr(min), repr(actual)), io, src_path)
         self.min = min
         self.actual = actual
+
 
 class ValidationGreaterThanError(ValidationFailedError):
     """Signals validation failure: we required "actual" value to be
