@@ -456,3 +456,11 @@ class ValidationGreaterThanError(ValidationFailedError):
         super(ValidationGreaterThanError, self).__init__("not in range, max %s, but got %s" % (repr(max), repr(actual)), io, src_path)
         self.max = max
         self.actual = actual
+
+class ValidationNotAnyOfError(ValidationFailedError):
+    """Signals validation failure: we required "actual" value to be
+    from the list, but it turned out that it's not.
+    """
+    def __init__(self, actual, io, src_path):
+        super(ValidationNotAnyOfError, self).__init__("not any of the list, got %s" % (repr(actual)), io, src_path)
+        self.actual = actual
