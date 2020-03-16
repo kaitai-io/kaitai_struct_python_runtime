@@ -306,31 +306,14 @@ class KaitaiStream(object):
 
     @staticmethod
     def bytes_strip_right(data, pad_byte):
-        new_len = len(data)
-        if PY2:
-            # data[...] must yield an integer, to compare with integer pad_byte
-            data = bytearray(data)
-
-        while new_len > 0 and data[new_len - 1] == pad_byte:
-            new_len -= 1
-
-        return data[:new_len]
+        return data.rstrip(KaitaiStream.byte_from_int(pad_byte))
 
     @staticmethod
     def bytes_terminate(data, term, include_term):
-        new_len = 0
-        max_len = len(data)
-        if PY2:
-            # data[...] must yield an integer, to compare with integer term
-            data = bytearray(data)
-
-        while new_len < max_len and data[new_len] != term:
-            new_len += 1
-
-        if include_term and new_len < max_len:
-            new_len += 1
-
-        return data[:new_len]
+        new_data, term_byte, _ = data.partition(KaitaiStream.byte_from_int(term))
+        if include_term:
+            new_data += term_byte
+        return new_data
 
     # ========================================================================
     # Byte array processing
@@ -375,6 +358,10 @@ class KaitaiStream(object):
         if PY2:
             return ord(v)
         return v
+
+    @staticmethod
+    def byte_from_int(i):
+        return chr(i) if PY2 else bytes([i])
 
     @staticmethod
     def byte_array_index(data, i):
