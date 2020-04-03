@@ -464,3 +464,12 @@ class ValidationNotAnyOfError(ValidationFailedError):
     def __init__(self, actual, io, src_path):
         super(ValidationNotAnyOfError, self).__init__("not any of the list, got %s" % (repr(actual)), io, src_path)
         self.actual = actual
+
+class ValidationRegexMatchError(ValidationFailedError):
+    """Signals validation failure: we required "actual" value to match 
+    the regex, but it turned out that it's not.
+    """
+    def __init__(self, regex, actual, io, src_path):
+        super(ValidationRegexMatchError, self).__init__("no match with regex %s, got %s" % (repr(regex), repr(actual)), io, src_path)
+        self.actual = actual
+        self.regex = regex
