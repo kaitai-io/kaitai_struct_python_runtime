@@ -237,11 +237,9 @@ class KaitaiStream(object):
 
         # raw mask with required number of 1s, starting from lowest bit
         mask = (1 << n) - 1
-        # shift mask to align with highest bits available in self.bits
+        # shift self.bits to align the highest bits with the mask & derive reading result
         shift_bits = self.bits_left - n
-        mask <<= shift_bits
-        # derive reading result
-        res = (self.bits & mask) >> shift_bits
+        res = (self.bits >> shift_bits) & mask
         # clear top bits that we've just read => AND with 1s
         self.bits_left -= n
         mask = (1 << self.bits_left) - 1
