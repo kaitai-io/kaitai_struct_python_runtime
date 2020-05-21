@@ -487,3 +487,12 @@ class ValidationNotAnyOfError(ValidationFailedError):
     def __init__(self, actual, io, src_path):
         super(ValidationNotAnyOfError, self).__init__("not any of the list, got %s" % (repr(actual)), io, src_path)
         self.actual = actual
+
+
+class ValidationExprError(ValidationFailedError):
+    """Signals validation failure: we required "actual" value to match
+    the expression, but it turned out that it doesn't.
+    """
+    def __init__(self, actual, io, src_path):
+        super(ValidationExprError, self).__init__("not matching the expression, got %s" % (repr(actual)), io, src_path)
+        self.actual = actual
