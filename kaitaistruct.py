@@ -119,6 +119,9 @@ class KaitaiStream(object):
     packer_u8le = struct.Struct('<Q')
 
     # ------------------------------------------------------------------------
+    # Reading
+    # ------------------------------------------------------------------------
+    # ------------------------------------------------------------------------
     # Signed
     # ------------------------------------------------------------------------
 
@@ -213,6 +216,95 @@ class KaitaiStream(object):
     def read_f8le(self):
         return KaitaiStream.packer_f8le.unpack(self.read_bytes(8))[0]
 
+    # ------------------------------------------------------------------------
+    # Writing
+    # ------------------------------------------------------------------------
+    # ------------------------------------------------------------------------
+    # Signed
+    # ------------------------------------------------------------------------
+
+    def write_s1(self, data):
+        return self.write_bytes(KaitaiStream.packer_s1.pack(data))
+
+    # ........................................................................
+    # Big-endian
+    # ........................................................................
+
+    def write_s2be(self, data):
+        return self.write_bytes(KaitaiStream.packer_s2be.pack(data))
+
+    def write_s4be(self, data):
+        return self.write_bytes(KaitaiStream.packer_s4be.pack(data))
+
+    def write_s8be(self, data):
+        return self.write_bytes(KaitaiStream.packer_s8be.pack(data))
+
+    # ........................................................................
+    # Little-endian
+    # ........................................................................
+
+    def write_s2le(self, data):
+        return self.write_bytes(KaitaiStream.packer_s2le.pack(data))
+
+    def write_s4le(self, data):
+        return self.write_bytes(KaitaiStream.packer_s4le.pack(data))
+
+    def write_s8le(self, data):
+        return self.write_bytes(KaitaiStream.packer_s8le.pack(data))
+
+    # ------------------------------------------------------------------------
+    # Unsigned
+    # ------------------------------------------------------------------------
+
+    def write_u1(self, data):
+        return self.write_bytes(KaitaiStream.packer_u1.pack(data))
+
+    # ........................................................................
+    # Big-endian
+    # ........................................................................
+
+    def write_u2be(self, data):
+        return self.write_bytes(KaitaiStream.packer_u2be.pack(data))
+
+    def write_u4be(self, data):
+        return self.write_bytes(KaitaiStream.packer_u4be.pack(data))
+
+    def write_u8be(self, data):
+        return self.write_bytes(KaitaiStream.packer_u8be.pack(data))
+
+    # ........................................................................
+    # Little-endian
+    # ........................................................................
+
+    def write_u2le(self, data):
+        return self.write_bytes(KaitaiStream.packer_u2le.pack(data))
+
+    def write_u4le(self, data):
+        return self.write_bytes(KaitaiStream.packer_u4le.pack(data))
+
+    def write_u8le(self, data):
+        return self.write_bytes(KaitaiStream.packer_u8le.pack(data))
+
+    # ........................................................................
+    # Big-endian
+    # ........................................................................
+
+    def write_f4be(self, data):
+        return self.write_bytes(KaitaiStream.packer_f4be.pack(data))
+
+    def write_f8be(self, data):
+        return self.write_bytes(KaitaiStream.packer_f8be.pack(data))
+
+    # ........................................................................
+    # Little-endian
+    # ........................................................................
+
+    def write_f4le(self, data):
+        return self.write_bytes(KaitaiStream.packer_f4le.pack(data))
+
+    def write_f8le(self, data):
+        return self.write_bytes(KaitaiStream.packer_f8le.pack(data))
+
     # ========================================================================
     # Unaligned bit values
     # ========================================================================
@@ -293,6 +385,48 @@ class KaitaiStream(object):
             )
         return r
 
+    def write_bytes(self, data):
+        if data is None:
+            return
+        nb = len(data)
+        if nb > 0 and self._io.write(data) != nb:
+            raise Exception(
+                "not all of %d bytes written" %
+                (nb,)
+            )
+        return nb
+
+    def write_terminator(self, term_byte):
+        return self._io.write(KaitaiStream.packer_u1.pack(term_byte))
+
+    def write_padding(self, actual_size, size, pad_byte):
+        pad = size - actual_size
+        if pad > 0:
+            if pad_byte is not None:
+                return self._io.write(KaitaiStream.packer_u1.pack(pad_byte) * pad)
+            else:
+                raise Exception("no padding filler provided")
+        return 0
+
+    def write_bytes_term(self, data, size, term_byte, pad_byte):
+        if data is None or not size:
+            return
+        nb = len(data)
+        if nb < size:
+            if nb > 0 and self._io.write(data) != nb:
+                raise Exception(
+                    "not all of %d bytes written" %
+                    (nb,)
+                )
+        else:
+            raise Exception(
+                "Writing %d bytes, but %d bytes (including terminator) were given" %
+                (size, nb + 1)
+            )
+        self.write_terminator(term_byte)
+        self.write_padding(nb, size - 1, pad_byte)
+        return size
+
     def read_bytes_full(self):
         return self._io.read()
 
@@ -302,7 +436,7 @@ class KaitaiStream(object):
             c = self._io.read(1)
             if c == b'':
                 if eos_error:
-                    raise Exception(
+                    raise EOFError(
                         "end of stream reached, but no terminator %d found" %
                         (term,)
                     )
