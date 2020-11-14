@@ -409,7 +409,7 @@ class KaitaiStream(object):
             return value
 
 
-class KaitaiStructError(BaseException):
+class KaitaiStructError(Exception):
     """Common ancestor for all error originating from Kaitai Struct usage.
     Stores KSY source path, pointing to an element supposedly guilty of
     an error.
