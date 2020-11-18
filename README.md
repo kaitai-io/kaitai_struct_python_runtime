@@ -1,7 +1,7 @@
 # Kaitai Struct: runtime library for Python
 
 [![PyPI](https://img.shields.io/pypi/v/kaitaistruct)](https://pypi.org/project/kaitaistruct/)
-![PyPI - Python Version](https://img.shields.io/pypi/pyversions/kaitaistruct)
+<a>![PyPI - Python Version](https://img.shields.io/pypi/pyversions/kaitaistruct)</a>
 [![PyPI - Downloads](https://img.shields.io/pypi/dd/kaitaistruct)](https://pypistats.org/packages/kaitaistruct)
 
 This library implements Kaitai Struct API for Python.
