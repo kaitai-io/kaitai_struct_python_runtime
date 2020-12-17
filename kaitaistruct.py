@@ -1,7 +1,7 @@
 import itertools
 import sys
 import struct
-from io import open, BytesIO, SEEK_CUR, SEEK_END  # noqa
+from io import SEEK_CUR, SEEK_END, BytesIO, open  # noqa
 
 PY2 = sys.version_info[0] == 2
 
@@ -12,7 +12,7 @@ PY2 = sys.version_info[0] == 2
 #   KS runtime library by this version number;
 # * distribution utils (setup.py) use this when packaging for PyPI
 #
-__version__ = '0.9'
+__version__ = "0.9"
 
 
 class KaitaiStruct(object):
@@ -30,7 +30,7 @@ class KaitaiStruct(object):
 
     @classmethod
     def from_file(cls, filename):
-        f = open(filename, 'rb')
+        f = open(filename, "rb")
         try:
             return cls(KaitaiStream(f))
         except Exception:
@@ -71,7 +71,7 @@ class KaitaiStream(object):
 
         io = self._io
         t = io.read(1)
-        if t == b'':
+        if t == b"":
             return True
         else:
             io.seek(-1, SEEK_CUR)
@@ -102,21 +102,21 @@ class KaitaiStream(object):
     # Integer numbers
     # ========================================================================
 
-    packer_s1 = struct.Struct('b')
-    packer_s2be = struct.Struct('>h')
-    packer_s4be = struct.Struct('>i')
-    packer_s8be = struct.Struct('>q')
-    packer_s2le = struct.Struct('<h')
-    packer_s4le = struct.Struct('<i')
-    packer_s8le = struct.Struct('<q')
+    packer_s1 = struct.Struct("b")
+    packer_s2be = struct.Struct(">h")
+    packer_s4be = struct.Struct(">i")
+    packer_s8be = struct.Struct(">q")
+    packer_s2le = struct.Struct("<h")
+    packer_s4le = struct.Struct("<i")
+    packer_s8le = struct.Struct("<q")
 
-    packer_u1 = struct.Struct('B')
-    packer_u2be = struct.Struct('>H')
-    packer_u4be = struct.Struct('>I')
-    packer_u8be = struct.Struct('>Q')
-    packer_u2le = struct.Struct('<H')
-    packer_u4le = struct.Struct('<I')
-    packer_u8le = struct.Struct('<Q')
+    packer_u1 = struct.Struct("B")
+    packer_u2be = struct.Struct(">H")
+    packer_u4be = struct.Struct(">I")
+    packer_u8be = struct.Struct(">Q")
+    packer_u2le = struct.Struct("<H")
+    packer_u4le = struct.Struct("<I")
+    packer_u8le = struct.Struct("<Q")
 
     # ------------------------------------------------------------------------
     # Signed
@@ -188,10 +188,10 @@ class KaitaiStream(object):
     # Floating point numbers
     # ========================================================================
 
-    packer_f4be = struct.Struct('>f')
-    packer_f8be = struct.Struct('>d')
-    packer_f4le = struct.Struct('<f')
-    packer_f8le = struct.Struct('<d')
+    packer_f4be = struct.Struct(">f")
+    packer_f8be = struct.Struct(">d")
+    packer_f4le = struct.Struct("<f")
+    packer_f8le = struct.Struct("<d")
 
     # ........................................................................
     # Big-endian
@@ -262,7 +262,7 @@ class KaitaiStream(object):
             buf = self.read_bytes(bytes_needed)
             for byte in buf:
                 byte = KaitaiStream.int_from_byte(byte)
-                self.bits |= (byte << self.bits_left)
+                self.bits |= byte << self.bits_left
                 self.bits_left += 8
 
         # raw mask with required number of 1s, starting from lowest bit
@@ -297,10 +297,10 @@ class KaitaiStream(object):
         return self._io.read()
 
     def read_bytes_term(self, term, include_term, consume_term, eos_error):
-        r = b''
+        r = b""
         while True:
             c = self._io.read(1)
-            if c == b'':
+            if c == b"":
                 if eos_error:
                     raise Exception(
                         "end of stream reached, but no terminator %d found" %
@@ -414,6 +414,7 @@ class KaitaiStructError(Exception):
     Stores KSY source path, pointing to an element supposedly guilty of
     an error.
     """
+
     def __init__(self, msg, src_path):
         super(KaitaiStructError, self).__init__("%s: %s" % (src_path, msg))
         self.src_path = src_path
@@ -424,6 +425,7 @@ class UndecidedEndiannessError(KaitaiStructError):
     switch, but nothing matches (although using endianness expression
     implies that there should be some positive result).
     """
+
     def __init__(self, src_path):
         super(KaitaiStructError, self).__init__("unable to decide on endianness for a type", src_path)
 
@@ -432,6 +434,7 @@ class ValidationFailedError(KaitaiStructError):
     """Common ancestor for all validation failures. Stores pointer to
     KaitaiStream IO object which was involved in an error.
     """
+
     def __init__(self, msg, io, src_path):
         super(ValidationFailedError, self).__init__("at pos %d: validation failed: %s" % (io.pos(), msg), src_path)
         self.io = io
@@ -441,6 +444,7 @@ class ValidationNotEqualError(ValidationFailedError):
     """Signals validation failure: we required "actual" value to be equal to
     "expected", but it turned out that it's not.
     """
+
     def __init__(self, expected, actual, io, src_path):
         super(ValidationNotEqualError, self).__init__("not equal, expected %s, but got %s" % (repr(expected), repr(actual)), io, src_path)
         self.expected = expected
@@ -451,6 +455,7 @@ class ValidationLessThanError(ValidationFailedError):
     """Signals validation failure: we required "actual" value to be
     greater than or equal to "min", but it turned out that it's not.
     """
+
     def __init__(self, min, actual, io, src_path):
         super(ValidationLessThanError, self).__init__("not in range, min %s, but got %s" % (repr(min), repr(actual)), io, src_path)
         self.min = min
@@ -461,6 +466,7 @@ class ValidationGreaterThanError(ValidationFailedError):
     """Signals validation failure: we required "actual" value to be
     less than or equal to "max", but it turned out that it's not.
     """
+
     def __init__(self, max, actual, io, src_path):
         super(ValidationGreaterThanError, self).__init__("not in range, max %s, but got %s" % (repr(max), repr(actual)), io, src_path)
         self.max = max
@@ -471,6 +477,7 @@ class ValidationNotAnyOfError(ValidationFailedError):
     """Signals validation failure: we required "actual" value to be
     from the list, but it turned out that it's not.
     """
+
     def __init__(self, actual, io, src_path):
         super(ValidationNotAnyOfError, self).__init__("not any of the list, got %s" % (repr(actual)), io, src_path)
         self.actual = actual
@@ -480,6 +487,7 @@ class ValidationExprError(ValidationFailedError):
     """Signals validation failure: we required "actual" value to match
     the expression, but it turned out that it doesn't.
     """
+
     def __init__(self, actual, io, src_path):
         super(ValidationExprError, self).__init__("not matching the expression, got %s" % (repr(actual)), io, src_path)
         self.actual = actual
