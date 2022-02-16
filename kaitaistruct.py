@@ -218,31 +218,33 @@ class KaitaiStream(object):
     # ========================================================================
 
     def align_to_byte(self):
-        self.bits = 0
         self.bits_left = 0
+        self.bits = 0
 
     def read_bits_int_be(self, n):
+        res = 0
+
         bits_needed = n - self.bits_left
+        self.bits_left = -bits_needed % 8
+
         if bits_needed > 0:
             # 1 bit  => 1 byte
             # 8 bits => 1 byte
             # 9 bits => 2 bytes
-            bytes_needed = ((bits_needed - 1) // 8) + 1
+            bytes_needed = ((bits_needed - 1) // 8) + 1 # `ceil(bits_needed / 8)`
             buf = self.read_bytes(bytes_needed)
+            if PY2:
+                buf = bytearray(buf)
             for byte in buf:
-                byte = KaitaiStream.int_from_byte(byte)
-                self.bits <<= 8
-                self.bits |= byte
-                self.bits_left += 8
+                res = res << 8 | byte
 
-        # raw mask with required number of 1s, starting from lowest bit
-        mask = (1 << n) - 1
-        # shift self.bits to align the highest bits with the mask & derive reading result
-        shift_bits = self.bits_left - n
-        res = (self.bits >> shift_bits) & mask
-        # clear top bits that we've just read => AND with 1s
-        self.bits_left -= n
-        mask = (1 << self.bits_left) - 1
+            new_bits = res
+            res = res >> self.bits_left | self.bits << bits_needed
+            self.bits = new_bits # will be masked at the end of the function
+        else:
+            res = self.bits >> -bits_needed # shift unneeded bits out
+
+        mask = (1 << self.bits_left) - 1 # `bits_left` is in range 0..7
         self.bits &= mask
 
         return res
@@ -253,26 +255,31 @@ class KaitaiStream(object):
         return self.read_bits_int_be(n)
 
     def read_bits_int_le(self, n):
+        res = 0
         bits_needed = n - self.bits_left
+
         if bits_needed > 0:
             # 1 bit  => 1 byte
             # 8 bits => 1 byte
             # 9 bits => 2 bytes
-            bytes_needed = ((bits_needed - 1) // 8) + 1
+            bytes_needed = ((bits_needed - 1) // 8) + 1 # `ceil(bits_needed / 8)`
             buf = self.read_bytes(bytes_needed)
-            for byte in buf:
-                byte = KaitaiStream.int_from_byte(byte)
-                self.bits |= (byte << self.bits_left)
-                self.bits_left += 8
+            if PY2:
+                buf = bytearray(buf)
+            for i, byte in enumerate(buf):
+                res |= byte << (i * 8)
 
-        # raw mask with required number of 1s, starting from lowest bit
-        mask = (1 << n) - 1
-        # derive reading result
-        res = self.bits & mask
-        # remove bottom bits that we've just read by shifting
-        self.bits >>= n
-        self.bits_left -= n
+            new_bits = res >> bits_needed
+            res = res << self.bits_left | self.bits
+            self.bits = new_bits
+        else:
+            res = self.bits
+            self.bits >>= n
 
+        self.bits_left = -bits_needed % 8
+
+        mask = (1 << n) - 1 # no problem with this in Python (arbitrary precision integers)
+        res &= mask
         return res
 
     # ========================================================================
