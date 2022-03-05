@@ -377,13 +377,11 @@ class KaitaiStream(object):
 
     @staticmethod
     def int_from_byte(v):
-        if PY2:
-            return ord(v)
-        return v
+        return ord(v) if PY2 else v
 
     @staticmethod
     def byte_from_int(i):
-        return chr(i) if PY2 else bytes([i])
+        return chr(i) if PY2 else bytes((i,))
 
     @staticmethod
     def byte_array_index(data, i):
