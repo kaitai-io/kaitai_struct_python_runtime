@@ -231,7 +231,7 @@ class KaitaiStream(object):
             # 1 bit  => 1 byte
             # 8 bits => 1 byte
             # 9 bits => 2 bytes
-            bytes_needed = ((bits_needed - 1) // 8) + 1 # `ceil(bits_needed / 8)`
+            bytes_needed = ((bits_needed - 1) // 8) + 1  # `ceil(bits_needed / 8)`
             buf = self.read_bytes(bytes_needed)
             if PY2:
                 buf = bytearray(buf)
@@ -240,11 +240,11 @@ class KaitaiStream(object):
 
             new_bits = res
             res = res >> self.bits_left | self.bits << bits_needed
-            self.bits = new_bits # will be masked at the end of the function
+            self.bits = new_bits  # will be masked at the end of the function
         else:
-            res = self.bits >> -bits_needed # shift unneeded bits out
+            res = self.bits >> -bits_needed  # shift unneeded bits out
 
-        mask = (1 << self.bits_left) - 1 # `bits_left` is in range 0..7
+        mask = (1 << self.bits_left) - 1  # `bits_left` is in range 0..7
         self.bits &= mask
 
         return res
@@ -262,7 +262,7 @@ class KaitaiStream(object):
             # 1 bit  => 1 byte
             # 8 bits => 1 byte
             # 9 bits => 2 bytes
-            bytes_needed = ((bits_needed - 1) // 8) + 1 # `ceil(bits_needed / 8)`
+            bytes_needed = ((bits_needed - 1) // 8) + 1  # `ceil(bits_needed / 8)`
             buf = self.read_bytes(bytes_needed)
             if PY2:
                 buf = bytearray(buf)
@@ -278,7 +278,7 @@ class KaitaiStream(object):
 
         self.bits_left = -bits_needed % 8
 
-        mask = (1 << n) - 1 # no problem with this in Python (arbitrary precision integers)
+        mask = (1 << n) - 1  # no problem with this in Python (arbitrary precision integers)
         res &= mask
         return res
 
