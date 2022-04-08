@@ -292,11 +292,21 @@ class KaitaiStream(object):
                 "requested invalid %d amount of bytes" %
                 (n,)
             )
-        r = self._io.read(n)
-        if len(r) < n:
+
+        is_satisfiable = True
+        if self._io.seekable():
+            num_bytes_available = self.size() - self.pos()
+            is_satisfiable = (n <= num_bytes_available)
+
+        if is_satisfiable:
+            r = self._io.read(n)
+            num_bytes_available = len(r)
+            is_satisfiable = (n <= num_bytes_available)
+
+        if not is_satisfiable:
             raise EOFError(
-                "requested %d bytes, but got only %d bytes" %
-                (n, len(r))
+                "requested %d bytes, but only %d bytes available" %
+                (n, num_bytes_available)
             )
         return r
 
