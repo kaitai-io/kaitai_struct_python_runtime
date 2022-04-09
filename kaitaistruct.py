@@ -300,7 +300,9 @@ class KaitaiStream(object):
             )
 
         is_satisfiable = True
-        if self._io.seekable():
+        # in Python 2, there is a common error ['file' object has no
+        # attribute 'seekable'], so we need to make sure that seekable() exists
+        if callable(getattr(self._io, 'seekable', None)) and self._io.seekable():
             num_bytes_available = self.size() - self.pos()
             is_satisfiable = (n <= num_bytes_available)
 
