@@ -312,10 +312,13 @@ class KaitaiStream(object):
             is_satisfiable = (n <= num_bytes_available)
 
         if not is_satisfiable:
+            # noinspection PyUnboundLocalVariable
             raise EOFError(
                 "requested %d bytes, but only %d bytes available" %
                 (n, num_bytes_available)
             )
+
+        # noinspection PyUnboundLocalVariable
         return r
 
     def read_bytes_full(self):
