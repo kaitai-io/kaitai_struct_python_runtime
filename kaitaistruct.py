@@ -397,8 +397,8 @@ class KaitaiStream(object):
         anti_amount = -amount & mask
 
         r = bytearray(data)
-        for i in range(len(r)):  # pylint:disable=consider-using-enumerate
-            r[i] = (r[i] << amount) & 0xff | (r[i] >> anti_amount)
+        for i, byte in enumerate(r):
+            r[i] = (byte << amount) & 0xff | (byte >> anti_amount)
         return bytes(r)
 
     # ========================================================================
