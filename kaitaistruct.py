@@ -20,7 +20,9 @@ __version__ = '0.10'
 # runtime is compatible with the generated code.
 API_VERSION = (0, 10)
 
-# pylint:disable=bad-indentation,too-many-public-methods,useless-object-inheritance,super-with-arguments
+# pylint: disable=invalid-name,missing-docstring,too-many-public-methods
+# pylint: disable=useless-object-inheritance,super-with-arguments,consider-using-f-string
+
 
 class KaitaiStruct(object):
     def __init__(self, stream):
@@ -453,7 +455,7 @@ class UndecidedEndiannessError(KaitaiStructError):
     implies that there should be some positive result).
     """
     def __init__(self, src_path):
-        super(KaitaiStructError, self).__init__("unable to decide on endianness for a type", src_path)
+        super(UndecidedEndiannessError, self).__init__("unable to decide on endianness for a type", src_path)
 
 
 class ValidationFailedError(KaitaiStructError):
