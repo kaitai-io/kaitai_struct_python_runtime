@@ -395,8 +395,7 @@ class KaitaiStream(object):
                 (group_size,)
             )
 
-        mask = group_size * 8 - 1
-        anti_amount = -amount & mask
+        anti_amount = -amount % (group_size * 8)
 
         r = bytearray(data)
         for i, byte in enumerate(r):
