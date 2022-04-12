@@ -20,6 +20,7 @@ __version__ = '0.10'
 # runtime is compatible with the generated code.
 API_VERSION = (0, 10)
 
+# pylint:disable=bad-indentation,too-many-public-methods,useless-object-inheritance,super-with-arguments
 
 class KaitaiStruct(object):
     def __init__(self, stream):
@@ -79,9 +80,9 @@ class KaitaiStream(object):
         t = io.read(1)
         if t == b'':
             return True
-        else:
-            io.seek(-1, SEEK_CUR)
-            return False
+
+        io.seek(-1, SEEK_CUR)
+        return False
 
     def seek(self, n):
         self._io.seek(n)
@@ -334,16 +335,17 @@ class KaitaiStream(object):
                         "end of stream reached, but no terminator %d found" %
                         (term,)
                     )
-                else:
-                    return r
-            elif ord(c) == term:
+
+                return r
+
+            if ord(c) == term:
                 if include_term:
                     r += c
                 if not consume_term:
                     self._io.seek(-1, SEEK_CUR)
                 return r
-            else:
-                r += c
+
+            r += c
 
     def ensure_fixed_contents(self, expected):
         actual = self._io.read(len(expected))
@@ -373,15 +375,15 @@ class KaitaiStream(object):
     def process_xor_one(data, key):
         if PY2:
             return bytes(bytearray(v ^ key for v in bytearray(data)))
-        else:
-            return bytes(v ^ key for v in data)
+
+        return bytes(v ^ key for v in data)
 
     @staticmethod
     def process_xor_many(data, key):
         if PY2:
             return bytes(bytearray(a ^ b for a, b in zip(bytearray(data), itertools.cycle(bytearray(key)))))
-        else:
-            return bytes(a ^ b for a, b in zip(data, itertools.cycle(key)))
+
+        return bytes(a ^ b for a, b in zip(data, itertools.cycle(key)))
 
     @staticmethod
     def process_rotate_left(data, amount, group_size):
@@ -395,7 +397,7 @@ class KaitaiStream(object):
         anti_amount = -amount & mask
 
         r = bytearray(data)
-        for i in range(len(r)):
+        for i in range(len(r)):  # pylint:disable=consider-using-enumerate
             r[i] = (r[i] << amount) & 0xff | (r[i] >> anti_amount)
         return bytes(r)
 
@@ -477,9 +479,9 @@ class ValidationLessThanError(ValidationFailedError):
     """Signals validation failure: we required "actual" value to be
     greater than or equal to "min", but it turned out that it's not.
     """
-    def __init__(self, min, actual, io, src_path):
-        super(ValidationLessThanError, self).__init__("not in range, min %s, but got %s" % (repr(min), repr(actual)), io, src_path)
-        self.min = min
+    def __init__(self, min_bound, actual, io, src_path):
+        super(ValidationLessThanError, self).__init__("not in range, min %s, but got %s" % (repr(min_bound), repr(actual)), io, src_path)
+        self.min = min_bound
         self.actual = actual
 
 
@@ -487,9 +489,9 @@ class ValidationGreaterThanError(ValidationFailedError):
     """Signals validation failure: we required "actual" value to be
     less than or equal to "max", but it turned out that it's not.
     """
-    def __init__(self, max, actual, io, src_path):
-        super(ValidationGreaterThanError, self).__init__("not in range, max %s, but got %s" % (repr(max), repr(actual)), io, src_path)
-        self.max = max
+    def __init__(self, max_bound, actual, io, src_path):
+        super(ValidationGreaterThanError, self).__init__("not in range, max %s, but got %s" % (repr(max_bound), repr(actual)), io, src_path)
+        self.max = max_bound
         self.actual = actual
 
 
