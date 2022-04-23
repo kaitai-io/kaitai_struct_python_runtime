@@ -99,10 +99,8 @@ class KaitaiStream(object):
         io = self._io
         # Remember our current position
         cur_pos = io.tell()
-        # Seek to the end of the File object
-        io.seek(0, SEEK_END)
-        # Remember position, which is equal to the full length
-        full_size = io.tell()
+        # Seek to the end of the stream and remember the full length
+        full_size = io.seek(0, SEEK_END)
         # Seek back to the current position
         io.seek(cur_pos)
         return full_size
