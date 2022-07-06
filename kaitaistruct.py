@@ -301,9 +301,18 @@ class KaitaiStream(object):
             )
 
         is_satisfiable = True
-        # in Python 2, there is a common error ['file' object has no
-        # attribute 'seekable'], so we need to make sure that seekable() exists
-        if callable(getattr(self._io, 'seekable', None)) and self._io.seekable():
+        # When a large number of bytes is requested, try to check first
+        # that there is indeed enough data left in the stream.
+        # This avoids reading large amounts of data only to notice afterwards
+        # that it's not long enough. For smaller amounts of data, it's faster to
+        # first read the data unconditionally and check the length afterwards.
+        if (
+            n >= 8*1024*1024  # = 8 MiB
+            # in Python 2, there is a common error ['file' object has no
+            # attribute 'seekable'], so we need to make sure that seekable() exists
+            and callable(getattr(self._io, 'seekable', None))
+            and self._io.seekable()
+        ):
             num_bytes_available = self.size() - self.pos()
             is_satisfiable = (n <= num_bytes_available)
 
