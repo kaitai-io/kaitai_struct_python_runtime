@@ -9,13 +9,19 @@ except ImportError:
     SEEK_END = 2
 
 
-def local_cycle(buf):
-    buf = list(buf)
-    if not buf:
-        return
-    while 1:
-        for b in buf:
-            yield b
+def local_cycle(p):
+    try:
+        len(p)
+    except TypeError:
+        # len() is not defined for this type. Assume it is
+        # a finite iterable so we must cache the elements.
+        cache = []
+        for i in p:
+            yield i
+            cache.append(i)
+        p = cache
+    while p:
+        yield from p
 
 
 try:
