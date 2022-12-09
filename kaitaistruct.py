@@ -1,7 +1,28 @@
-import itertools
 import sys
 import struct
-from io import open, BytesIO, SEEK_CUR, SEEK_END  # noqa
+from io import open, BytesIO # noqa
+
+try:
+    from io import SEEK_CUR, SEEK_END
+except ImportError:
+    SEEK_CUR = 1
+    SEEK_END = 2
+
+
+def local_cycle(buf):
+    buf = list(buf)
+    if not buf:
+        return
+    while 1:
+        for b in buf:
+            yield b
+
+
+try:
+    from itertools import cycle 
+except ImportError:
+    cycle = local_cycle
+    
 
 PY2 = sys.version_info[0] == 2
 
