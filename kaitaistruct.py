@@ -411,9 +411,9 @@ class KaitaiStream(object):
     @staticmethod
     def process_xor_many(data, key):
         if PY2:
-            return bytes(bytearray(a ^ b for a, b in zip(bytearray(data), itertools.cycle(bytearray(key)))))
+            return bytes(bytearray(a ^ b for a, b in zip(bytearray(data), cycle(bytearray(key)))))
 
-        return bytes(a ^ b for a, b in zip(data, itertools.cycle(key)))
+        return bytes(a ^ b for a, b in zip(data, cycle(key)))
 
     @staticmethod
     def process_rotate_left(data, amount, group_size):
