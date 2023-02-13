@@ -70,9 +70,7 @@ class KaitaiStream(object):
     def close(self):
         self._io.close()
 
-    # ========================================================================
-    # Stream positioning
-    # ========================================================================
+    # region Stream positioning
 
     def is_eof(self):
         if self.bits_left > 0:
@@ -105,9 +103,9 @@ class KaitaiStream(object):
         io.seek(cur_pos)
         return full_size
 
-    # ========================================================================
-    # Integer numbers
-    # ========================================================================
+    # endregion
+
+    # region Structs for numeric types
 
     packer_s1 = struct.Struct('b')
     packer_s2be = struct.Struct('>h')
@@ -125,16 +123,21 @@ class KaitaiStream(object):
     packer_u4le = struct.Struct('<I')
     packer_u8le = struct.Struct('<Q')
 
-    # ------------------------------------------------------------------------
-    # Signed
-    # ------------------------------------------------------------------------
+    packer_f4be = struct.Struct('>f')
+    packer_f8be = struct.Struct('>d')
+    packer_f4le = struct.Struct('<f')
+    packer_f8le = struct.Struct('<d')
+
+    # endregion
+
+    # region Integer numbers
+
+    # region Signed
 
     def read_s1(self):
         return KaitaiStream.packer_s1.unpack(self.read_bytes(1))[0]
 
-    # ........................................................................
-    # Big-endian
-    # ........................................................................
+    # region Big-endian
 
     def read_s2be(self):
         return KaitaiStream.packer_s2be.unpack(self.read_bytes(2))[0]
@@ -145,9 +148,9 @@ class KaitaiStream(object):
     def read_s8be(self):
         return KaitaiStream.packer_s8be.unpack(self.read_bytes(8))[0]
 
-    # ........................................................................
-    # Little-endian
-    # ........................................................................
+    # endregion
+
+    # region Little-endian
 
     def read_s2le(self):
         return KaitaiStream.packer_s2le.unpack(self.read_bytes(2))[0]
@@ -158,16 +161,16 @@ class KaitaiStream(object):
     def read_s8le(self):
         return KaitaiStream.packer_s8le.unpack(self.read_bytes(8))[0]
 
-    # ------------------------------------------------------------------------
-    # Unsigned
-    # ------------------------------------------------------------------------
+    # endregion
+
+    # endregion
+
+    # region Unsigned
 
     def read_u1(self):
         return KaitaiStream.packer_u1.unpack(self.read_bytes(1))[0]
 
-    # ........................................................................
-    # Big-endian
-    # ........................................................................
+    # region Big-endian
 
     def read_u2be(self):
         return KaitaiStream.packer_u2be.unpack(self.read_bytes(2))[0]
@@ -178,9 +181,9 @@ class KaitaiStream(object):
     def read_u8be(self):
         return KaitaiStream.packer_u8be.unpack(self.read_bytes(8))[0]
 
-    # ........................................................................
-    # Little-endian
-    # ........................................................................
+    # endregion
+
+    # region Little-endian
 
     def read_u2le(self):
         return KaitaiStream.packer_u2le.unpack(self.read_bytes(2))[0]
@@ -191,18 +194,15 @@ class KaitaiStream(object):
     def read_u8le(self):
         return KaitaiStream.packer_u8le.unpack(self.read_bytes(8))[0]
 
-    # ========================================================================
-    # Floating point numbers
-    # ========================================================================
+    # endregion
 
-    packer_f4be = struct.Struct('>f')
-    packer_f8be = struct.Struct('>d')
-    packer_f4le = struct.Struct('<f')
-    packer_f8le = struct.Struct('<d')
+    # endregion
 
-    # ........................................................................
-    # Big-endian
-    # ........................................................................
+    # endregion
+
+    # region Floating point numbers
+
+    # region Big-endian
 
     def read_f4be(self):
         return KaitaiStream.packer_f4be.unpack(self.read_bytes(4))[0]
@@ -210,9 +210,9 @@ class KaitaiStream(object):
     def read_f8be(self):
         return KaitaiStream.packer_f8be.unpack(self.read_bytes(8))[0]
 
-    # ........................................................................
-    # Little-endian
-    # ........................................................................
+    # endregion
+
+    # region Little-endian
 
     def read_f4le(self):
         return KaitaiStream.packer_f4le.unpack(self.read_bytes(4))[0]
@@ -220,9 +220,11 @@ class KaitaiStream(object):
     def read_f8le(self):
         return KaitaiStream.packer_f8le.unpack(self.read_bytes(8))[0]
 
-    # ========================================================================
-    # Unaligned bit values
-    # ========================================================================
+    # endregion
+
+    # endregion
+
+    # region Unaligned bit values
 
     def align_to_byte(self):
         self.bits_left = 0
@@ -289,9 +291,9 @@ class KaitaiStream(object):
         res &= mask
         return res
 
-    # ========================================================================
-    # Byte arrays
-    # ========================================================================
+    # endregion
+
+    # region Byte arrays
 
     def read_bytes(self, n):
         if n < 0:
@@ -376,9 +378,9 @@ class KaitaiStream(object):
             new_data += term_byte
         return new_data
 
-    # ========================================================================
-    # Byte array processing
-    # ========================================================================
+    # endregion
+
+    # region Byte array processing
 
     @staticmethod
     def process_xor_one(data, key):
@@ -409,9 +411,9 @@ class KaitaiStream(object):
             r[i] = (byte << amount) & 0xff | (byte >> anti_amount)
         return bytes(r)
 
-    # ========================================================================
-    # Misc
-    # ========================================================================
+    # endregion
+
+    # region Misc runtime operations
 
     @staticmethod
     def int_from_byte(v):
@@ -443,6 +445,8 @@ class KaitaiStream(object):
             return enum_obj(value)
         except ValueError:
             return value
+
+    # endregion
 
 
 class KaitaiStructError(Exception):
