@@ -56,10 +56,27 @@ class KaitaiStruct(object):
         return cls(KaitaiStream(io))
 
 
+class ReadWriteKaitaiStruct(KaitaiStruct):
+    def _fetch_instances(self):
+        raise NotImplementedError()
+
+    def _write(self, io=None):
+        self._write__seq(io)
+        self._fetch_instances()
+        self._io.write_back_child_streams()
+
+    def _write__seq(self, io):
+        if io is not None:
+            self._io = io
+
+
 class KaitaiStream(object):
     def __init__(self, io):
         self._io = io
         self.align_to_byte()
+
+        self.write_back_handler = None
+        self.child_streams = []
 
     def __enter__(self):
         return self
@@ -129,6 +146,8 @@ class KaitaiStream(object):
     packer_f8le = struct.Struct('<d')
 
     # endregion
+
+    # region Reading
 
     # region Integer numbers
 
@@ -380,6 +399,144 @@ class KaitaiStream(object):
 
     # endregion
 
+    # endregion
+
+    # region Writing
+
+    # region Integer numbers
+
+    # region Signed
+
+    def write_s1(self, v):
+        self.write_bytes(KaitaiStream.packer_s1.pack(v))
+
+    # region Big-endian
+
+    def write_s2be(self, v):
+        self.write_bytes(KaitaiStream.packer_s2be.pack(v))
+
+    def write_s4be(self, v):
+        self.write_bytes(KaitaiStream.packer_s4be.pack(v))
+
+    def write_s8be(self, v):
+        self.write_bytes(KaitaiStream.packer_s8be.pack(v))
+
+    # endregion
+
+    # region Little-endian
+
+    def write_s2le(self, v):
+        self.write_bytes(KaitaiStream.packer_s2le.pack(v))
+
+    def write_s4le(self, v):
+        self.write_bytes(KaitaiStream.packer_s4le.pack(v))
+
+    def write_s8le(self, v):
+        self.write_bytes(KaitaiStream.packer_s8le.pack(v))
+
+    # endregion
+
+    # endregion
+
+    # region Unsigned
+
+    def write_u1(self, v):
+        self.write_bytes(KaitaiStream.packer_u1.pack(v))
+
+    # region Big-endian
+
+    def write_u2be(self, v):
+        self.write_bytes(KaitaiStream.packer_u2be.pack(v))
+
+    def write_u4be(self, v):
+        self.write_bytes(KaitaiStream.packer_u4be.pack(v))
+
+    def write_u8be(self, v):
+        self.write_bytes(KaitaiStream.packer_u8be.pack(v))
+
+    # endregion
+
+    # region Little-endian
+
+    def write_u2le(self, v):
+        self.write_bytes(KaitaiStream.packer_u2le.pack(v))
+
+    def write_u4le(self, v):
+        self.write_bytes(KaitaiStream.packer_u4le.pack(v))
+
+    def write_u8le(self, v):
+        self.write_bytes(KaitaiStream.packer_u8le.pack(v))
+
+    # endregion
+
+    # endregion
+
+    # endregion
+
+    # region Floating point numbers
+
+    # region Big-endian
+
+    def write_f4be(self, v):
+        self.write_bytes(KaitaiStream.packer_f4be.pack(v))
+
+    def write_f8be(self, v):
+        self.write_bytes(KaitaiStream.packer_f8be.pack(v))
+
+    # endregion
+
+    # region Little-endian
+
+    def write_f4le(self, v):
+        self.write_bytes(KaitaiStream.packer_f4le.pack(v))
+
+    def write_f8le(self, v):
+        self.write_bytes(KaitaiStream.packer_f8le.pack(v))
+
+    # endregion
+
+    # endregion
+
+    # region Unaligned bit values
+
+    def write_align_to_byte(self):
+        raise NotImplementedError()
+
+    def write_bits_int_be(self, n, val):
+        raise NotImplementedError()
+
+    def write_bits_int_le(self, n, val):
+        raise NotImplementedError()
+
+    # endregion
+
+    # region Byte arrays
+
+    def write_bytes(self, buf):
+        n = len(buf)
+        num_bytes_written = self._io.write(buf)
+
+        if num_bytes_written != n:
+            raise EOFError(
+                "tried to write %d bytes, but only %d bytes were written" %
+                (n, num_bytes_written)
+            )
+
+    def write_bytes_limit(self, buf, size, term, pad_byte):
+        n = len(buf)
+        self.write_bytes(buf)
+        if n < size:
+            self.write_u1(term)
+            pad_len = size - n - 1
+            for _ in range(pad_len):
+                self.write_u1(pad_byte)
+        elif n > size:
+            raise ValueError("writing %d bytes, but %d bytes were given" % (size, n))
+
+    # endregion
+
+    # endregion
+
     # region Byte array processing
 
     @staticmethod
@@ -436,6 +593,10 @@ class KaitaiStream(object):
         return KaitaiStream.int_from_byte(max(b))
 
     @staticmethod
+    def byte_array_index_of(data, b):
+        return data.find(KaitaiStream.byte_from_int(b))
+
+    @staticmethod
     def resolve_enum(enum_obj, value):
         """Resolves value using enum: if the value is not found in the map,
         we'll just use literal value per se. Works around problem with Python
@@ -447,6 +608,41 @@ class KaitaiStream(object):
             return value
 
     # endregion
+
+    def to_byte_array(self):
+        pos = self.pos()
+        self.seek(0)
+        r = self.read_bytes_full()
+        self.seek(pos)
+        return r
+
+    class WriteBackHandler(object):
+        def __init__(self, pos, handler):
+            self.pos = pos
+            self.handler = handler
+
+        def write_back(self, parent):
+            parent.seek(self.pos)
+            self.handler(parent)
+
+    def add_child_stream(self, child):
+        self.child_streams.append(child)
+
+    def write_back_child_streams(self, parent=None):
+        _pos = self.pos()
+        for child in self.child_streams:
+            child.write_back_child_streams(self)
+
+        # NOTE: Python 2 doesn't have list.clear() so it can't be used, see
+        # https://docs.python.org/3.11/library/stdtypes.html#mutable-sequence-types
+        # ("New in version 3.3: clear() and copy() methods.")
+        del self.child_streams[:]
+        self.seek(_pos)
+        if parent is not None:
+            self._write_back(parent)
+
+    def _write_back(self, parent):
+        self.write_back_handler.write_back(parent)
 
 
 class KaitaiStructError(Exception):
@@ -523,3 +719,11 @@ class ValidationExprError(ValidationFailedError):
     def __init__(self, actual, io, src_path):
         super(ValidationExprError, self).__init__("not matching the expression, got %s" % (repr(actual)), io, src_path)
         self.actual = actual
+
+
+class ConsistencyError(Exception):
+    def __init__(self, attr_id, actual, expected):
+        super(ConsistencyError, self).__init__("Check failed: %s, expected: %s, actual: %s" % (attr_id, repr(expected), repr(actual)))
+        self.id = attr_id
+        self.actual = actual
+        self.expected = expected
