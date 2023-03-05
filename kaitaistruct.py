@@ -74,6 +74,7 @@ class KaitaiStream(object):
     def __init__(self, io):
         self._io = io
         self.align_to_byte()
+        self.bits_le = False
 
         self.write_back_handler = None
         self.child_streams = []
@@ -500,13 +501,64 @@ class KaitaiStream(object):
     # region Unaligned bit values
 
     def write_align_to_byte(self):
-        raise NotImplementedError()
+        if self.bits_left > 0:
+            b = self.bits
+            if not self.bits_le:
+                b <<= 8 - self.bits_left
+            self.write_bytes(KaitaiStream.byte_from_int(b))
+            self.align_to_byte()
 
     def write_bits_int_be(self, n, val):
-        raise NotImplementedError()
+        self.bits_le = False
+
+        mask = (1 << n) - 1  # no problem with this in Python (arbitrary precision integers)
+        val &= mask
+
+        bits_to_write = self.bits_left + n
+        bytes_to_write = bits_to_write // 8
+
+        self.bits_left = bits_to_write % 8
+
+        if bytes_to_write > 0:
+            buf = bytearray(bytes_to_write)
+
+            mask = (1 << self.bits_left) - 1  # `bits_left` is in range 0..7
+            new_bits = val & mask
+            val = val >> self.bits_left | self.bits << (n - self.bits_left)
+            self.bits = new_bits
+
+            for i in range(bytes_to_write - 1, -1, -1):
+                buf[i] = val & 0xff
+                val >>= 8
+            self.write_bytes(buf)
+        else:
+            self.bits = self.bits << n | val
 
     def write_bits_int_le(self, n, val):
-        raise NotImplementedError()
+        self.bits_le = True
+
+        bits_to_write = self.bits_left + n
+        bytes_to_write = bits_to_write // 8
+
+        old_bits_left = self.bits_left
+        self.bits_left = bits_to_write % 8
+
+        if bytes_to_write > 0:
+            buf = bytearray(bytes_to_write)
+
+            new_bits = val >> (n - self.bits_left)  # no problem with this in Python (arbitrary precision integers)
+            val = val << old_bits_left | self.bits
+            self.bits = new_bits
+
+            for i in range(bytes_to_write):
+                buf[i] = val & 0xff
+                val >>= 8
+            self.write_bytes(buf)
+        else:
+            self.bits |= val << old_bits_left
+
+        mask = (1 << self.bits_left) - 1  # `bits_left` is in range 0..7
+        self.bits &= mask
 
     # endregion
 
