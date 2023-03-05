@@ -75,6 +75,7 @@ class KaitaiStream(object):
         self._io = io
         self.align_to_byte()
         self.bits_le = False
+        self.bits_write_mode = False
 
         self.write_back_handler = None
         self.child_streams = []
@@ -103,6 +104,11 @@ class KaitaiStream(object):
         return False
 
     def seek(self, n):
+        if self.bits_write_mode:
+            self.write_align_to_byte()
+        else:
+            self.align_to_byte()
+
         self._io.seek(n)
 
     def pos(self):
@@ -251,6 +257,8 @@ class KaitaiStream(object):
         self.bits = 0
 
     def read_bits_int_be(self, n):
+        self.bits_write_mode = False
+
         res = 0
 
         bits_needed = n - self.bits_left
@@ -261,7 +269,7 @@ class KaitaiStream(object):
             # 8 bits => 1 byte
             # 9 bits => 2 bytes
             bytes_needed = ((bits_needed - 1) // 8) + 1  # `ceil(bits_needed / 8)`
-            buf = self.read_bytes(bytes_needed)
+            buf = self._read_bytes_not_aligned(bytes_needed)
             if PY2:
                 buf = bytearray(buf)
             for byte in buf:
@@ -284,6 +292,8 @@ class KaitaiStream(object):
         return self.read_bits_int_be(n)
 
     def read_bits_int_le(self, n):
+        self.bits_write_mode = False
+
         res = 0
         bits_needed = n - self.bits_left
 
@@ -292,7 +302,7 @@ class KaitaiStream(object):
             # 8 bits => 1 byte
             # 9 bits => 2 bytes
             bytes_needed = ((bits_needed - 1) // 8) + 1  # `ceil(bits_needed / 8)`
-            buf = self.read_bytes(bytes_needed)
+            buf = self._read_bytes_not_aligned(bytes_needed)
             if PY2:
                 buf = bytearray(buf)
             for i, byte in enumerate(buf):
@@ -316,6 +326,10 @@ class KaitaiStream(object):
     # region Byte arrays
 
     def read_bytes(self, n):
+        self.align_to_byte()
+        return self._read_bytes_not_aligned(n)
+
+    def _read_bytes_not_aligned(self, n):
         if n < 0:
             raise ValueError(
                 "requested invalid %d amount of bytes" %
@@ -354,9 +368,11 @@ class KaitaiStream(object):
         return r
 
     def read_bytes_full(self):
+        self.align_to_byte()
         return self._io.read()
 
     def read_bytes_term(self, term, include_term, consume_term, eos_error):
+        self.align_to_byte()
         r = b''
         while True:
             c = self._io.read(1)
@@ -505,11 +521,12 @@ class KaitaiStream(object):
             b = self.bits
             if not self.bits_le:
                 b <<= 8 - self.bits_left
-            self.write_bytes(KaitaiStream.byte_from_int(b))
+            self._write_bytes_not_aligned(KaitaiStream.byte_from_int(b))
             self.align_to_byte()
 
     def write_bits_int_be(self, n, val):
         self.bits_le = False
+        self.bits_write_mode = True
 
         mask = (1 << n) - 1  # no problem with this in Python (arbitrary precision integers)
         val &= mask
@@ -530,12 +547,13 @@ class KaitaiStream(object):
             for i in range(bytes_to_write - 1, -1, -1):
                 buf[i] = val & 0xff
                 val >>= 8
-            self.write_bytes(buf)
+            self._write_bytes_not_aligned(buf)
         else:
             self.bits = self.bits << n | val
 
     def write_bits_int_le(self, n, val):
         self.bits_le = True
+        self.bits_write_mode = True
 
         bits_to_write = self.bits_left + n
         bytes_to_write = bits_to_write // 8
@@ -553,7 +571,7 @@ class KaitaiStream(object):
             for i in range(bytes_to_write):
                 buf[i] = val & 0xff
                 val >>= 8
-            self.write_bytes(buf)
+            self._write_bytes_not_aligned(buf)
         else:
             self.bits |= val << old_bits_left
 
@@ -565,6 +583,10 @@ class KaitaiStream(object):
     # region Byte arrays
 
     def write_bytes(self, buf):
+        self.write_align_to_byte()
+        self._write_bytes_not_aligned(buf)
+
+    def _write_bytes_not_aligned(self, buf):
         n = len(buf)
         num_bytes_written = self._io.write(buf)
 
