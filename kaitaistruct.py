@@ -103,7 +103,7 @@ class KaitaiStream(object):
     # region Stream positioning
 
     def is_eof(self):
-        if self.bits_left > 0:
+        if not self.bits_write_mode and self.bits_left > 0:
             return False
 
         io = self._io
@@ -123,7 +123,7 @@ class KaitaiStream(object):
         self._io.seek(n)
 
     def pos(self):
-        return self._io.tell()
+        return self._io.tell() + (1 if self.bits_write_mode and self.bits_left > 0 else 0)
 
     def size(self):
         # Python has no internal File object API function to get
