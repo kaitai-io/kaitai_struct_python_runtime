@@ -93,7 +93,12 @@ class KaitaiStream(object):
         self.close()
 
     def close(self):
-        self._io.close()
+        try:
+            if self.bits_write_mode:
+                self.write_align_to_byte()
+        finally:
+            self.align_to_byte()
+            self._io.close()
 
     # region Stream positioning
 
