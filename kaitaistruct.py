@@ -80,6 +80,12 @@ class KaitaiStream(object):
         self.write_back_handler = None
         self.child_streams = []
 
+        if (
+            callable(getattr(self._io, 'seekable', None))
+            and self._io.seekable()
+        ):
+            self._size = self.size()
+
     def __enter__(self):
         return self
 
@@ -587,13 +593,24 @@ class KaitaiStream(object):
         self._write_bytes_not_aligned(buf)
 
     def _write_bytes_not_aligned(self, buf):
-        n = len(buf)
-        num_bytes_written = self._io.write(buf)
+        if not hasattr(self, '_size'):
+            raise ValueError("writing to non-seekable streams is not supported")
 
-        if num_bytes_written != n:
+        n = len(buf)
+        is_satisfiable = True
+
+        num_bytes_left = self._size - self._io.tell()
+        if n > num_bytes_left:
+            is_satisfiable = False
+
+        if is_satisfiable:
+            num_bytes_left = self._io.write(buf)
+            is_satisfiable = (num_bytes_left == n)
+
+        if not is_satisfiable:
             raise EOFError(
-                "tried to write %d bytes, but only %d bytes were written" %
-                (n, num_bytes_written)
+                "requested to write %d bytes, but only %d bytes left in the stream" %
+                (n, num_bytes_left)
             )
 
     def write_bytes_limit(self, buf, size, term, pad_byte):
