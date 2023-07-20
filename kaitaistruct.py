@@ -134,6 +134,19 @@ class KaitaiStream(object):
         cur_pos = io.tell()
         # Seek to the end of the stream and remember the full length
         full_size = io.seek(0, SEEK_END)
+
+        if full_size is None:
+            # In Python 2, the seek() method of 'file' objects (created by the
+            # built-in open() function) has no return value, so we have to call
+            # tell() ourselves to get the new absolute position - see
+            # <https://github.com/kaitai-io/kaitai_struct_python_runtime/issues/72>.
+            #
+            # In Python 3, seek() methods of all
+            # <https://docs.python.org/3/library/io.html> streams return the new
+            # position already, so this won't be needed once we drop support for
+            # Python 2.
+            full_size = io.tell()
+
         # Seek back to the current position
         io.seek(cur_pos)
         return full_size
