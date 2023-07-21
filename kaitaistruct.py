@@ -80,11 +80,23 @@ class KaitaiStream(object):
         self.write_back_handler = None
         self.child_streams = []
 
-        if (
-            callable(getattr(self._io, 'seekable', None))
-            and self._io.seekable()
-        ):
+        try:
             self._size = self.size()
+        # IOError is for Python 2 (IOError also exists in Python 3, but it has
+        # become just an alias for OSError).
+        #
+        # Although I haven't actually seen a bare ValueError raised in this case
+        # in practice, chances are some implementation may be doing it (see
+        # <https://docs.python.org/3/library/io.html#io.IOBase> for reference:
+        # "Also, implementations may raise a ValueError (or
+        # UnsupportedOperation) when operations they do not support are
+        # called."). And I've seen ValueError raised at least in Python 2 when
+        # calling read() on an unreadable stream.
+        except (OSError, IOError, ValueError):
+            # tell() or seek() failed - we have a non-seekable stream (which is
+            # fine for reading, but writing will fail, see
+            # _write_bytes_not_aligned())
+            pass
 
     def __enter__(self):
         return self
