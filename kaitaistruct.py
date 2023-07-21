@@ -109,7 +109,6 @@ class KaitaiStream(object):
             if self.bits_write_mode:
                 self.write_align_to_byte()
         finally:
-            self.align_to_byte()
             self._io.close()
 
     # region Stream positioning
@@ -574,8 +573,32 @@ class KaitaiStream(object):
             b = self.bits
             if not self.bits_le:
                 b <<= 8 - self.bits_left
-            self._write_bytes_not_aligned(KaitaiStream.byte_from_int(b))
+
+            # We clear the `bits_left` and `bits` fields using align_to_byte()
+            # before writing the byte in the stream so that it happens even in
+            # case the write fails. The reason is that if the write fails, it
+            # would likely be a permanent issue that's not going to resolve
+            # itself when retrying the operation with the same stream state, and
+            # since seek() calls write_align_to_byte() at the beginning too, you
+            # wouldn't be even able to seek anywhere without getting the same
+            # exception again. So the stream could be in a broken state,
+            # throwing the same exception over and over again even though you've
+            # already processed it and you'd like to move on. And the only way
+            # to get rid of it would be to call align_to_byte() externally
+            # (given how it's currently implemented), but that's really just a
+            # coincidence - that's a method intended for reading (not writing)
+            # and it should never be necessary to call it from the outside (it's
+            # more like an internal method now).
+            #
+            # So it seems more reasonable to deliver the exception once and let
+            # the user application process it, but otherwise clear the bit
+            # buffer to make the stream ready for further operations and to
+            # avoid repeatedly delivering an exception for one past failed
+            # operation. The rationale behind this is that it's not really a
+            # failure of the "align to byte" operation, but the writing of some
+            # bits to the stream that was requested earlier.
             self.align_to_byte()
+            self._write_bytes_not_aligned(KaitaiStream.byte_from_int(b))
 
     def write_bits_int_be(self, n, val):
         self.bits_le = False
