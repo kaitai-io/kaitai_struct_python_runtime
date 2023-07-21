@@ -118,13 +118,12 @@ class KaitaiStream(object):
         if not self.bits_write_mode and self.bits_left > 0:
             return False
 
-        io = self._io
-        t = io.read(1)
-        if t == b'':
-            return True
-
-        io.seek(-1, SEEK_CUR)
-        return False
+        # NB: previously, we first tried if self._io.read(1) did in fact read 1
+        # byte from the stream (and then seeked 1 byte back if so), but given
+        # that is_eof() may be called from both read and write contexts, it's
+        # more universal not to use read() at all. See also
+        # <https://github.com/kaitai-io/kaitai_struct_python_runtime/issues/75>.
+        return self._io.tell() >= self.size()
 
     def seek(self, n):
         if self.bits_write_mode:
