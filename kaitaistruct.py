@@ -454,18 +454,13 @@ class KaitaiStream(object):
 
     # region Writing
 
-    def _ensure_bytes_left_to_write(self, n):
+    def _ensure_bytes_left_to_write(self, n, pos):
         try:
             full_size = self._size
         except AttributeError:
             raise ValueError("writing to non-seekable streams is not supported")
 
-        # Unlike self._io.tell(), pos() respects the `bits_left` field (so it
-        # will return the stream position as if it were already aligned on a
-        # byte boundary), which is important when called from write_bits_int_*()
-        # methods (it ensures that we report the same numbers of bytes here as
-        # read_bits_int_*() methods would).
-        num_bytes_left = full_size - self.pos()
+        num_bytes_left = full_size - pos
         if n > num_bytes_left:
             raise EOFError(
                 "requested to write %d bytes, but only %d bytes left in the stream" %
@@ -609,7 +604,12 @@ class KaitaiStream(object):
 
         bits_to_write = self.bits_left + n
         bytes_needed = ((bits_to_write - 1) // 8) + 1  # `ceil(bits_to_write / 8)`
-        self._ensure_bytes_left_to_write(bytes_needed - (1 if self.bits_left > 0 else 0))
+
+        # Unlike self._io.tell(), pos() respects the `bits_left` field (it
+        # returns the stream position as if it were already aligned on a byte
+        # boundary), which ensures that we report the same numbers of bytes here
+        # as read_bits_int_*() methods would.
+        self._ensure_bytes_left_to_write(bytes_needed - (1 if self.bits_left > 0 else 0), self.pos())
 
         bytes_to_write = bits_to_write // 8
         self.bits_left = bits_to_write % 8
@@ -633,13 +633,18 @@ class KaitaiStream(object):
         self.bits_le = True
         self.bits_write_mode = True
 
-        bits_needed = self.bits_left + n
-        bytes_needed = ((bits_needed - 1) // 8) + 1  # `ceil(bits_needed / 8)`
-        self._ensure_bytes_left_to_write(bytes_needed - (1 if self.bits_left > 0 else 0))
+        bits_to_write = self.bits_left + n
+        bytes_needed = ((bits_to_write - 1) // 8) + 1  # `ceil(bits_to_write / 8)`
 
-        bytes_to_write = bits_needed // 8
+        # Unlike self._io.tell(), pos() respects the `bits_left` field (it
+        # returns the stream position as if it were already aligned on a byte
+        # boundary), which ensures that we report the same numbers of bytes here
+        # as read_bits_int_*() methods would.
+        self._ensure_bytes_left_to_write(bytes_needed - (1 if self.bits_left > 0 else 0), self.pos())
+
+        bytes_to_write = bits_to_write // 8
         old_bits_left = self.bits_left
-        self.bits_left = bits_needed % 8
+        self.bits_left = bits_to_write % 8
 
         if bytes_to_write > 0:
             buf = bytearray(bytes_to_write)
@@ -668,7 +673,7 @@ class KaitaiStream(object):
 
     def _write_bytes_not_aligned(self, buf):
         n = len(buf)
-        self._ensure_bytes_left_to_write(n)
+        self._ensure_bytes_left_to_write(n, self._io.tell())
         self._io.write(buf)
 
     def write_bytes_limit(self, buf, size, term, pad_byte):
