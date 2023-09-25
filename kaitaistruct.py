@@ -823,7 +823,7 @@ class ValidationFailedError(KaitaiStructError):
     KaitaiStream IO object which was involved in an error.
     """
     def __init__(self, msg, io, src_path):
-        super(ValidationFailedError, self).__init__("at pos %d: validation failed: %s" % (io.pos(), msg), src_path)
+        super(ValidationFailedError, self).__init__(("" if io is None else "at pos %d: " % (io.pos(),)) + "validation failed: " + msg, src_path)
         self.io = io
 
 
