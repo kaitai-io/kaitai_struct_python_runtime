@@ -108,6 +108,8 @@ class KaitaiStream(object):
         try:
             if self.bits_write_mode:
                 self.write_align_to_byte()
+            else:
+                self.align_to_byte()
         finally:
             self._io.close()
 
