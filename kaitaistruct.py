@@ -445,10 +445,10 @@ class KaitaiStream(object):
 
     @staticmethod
     def bytes_terminate(data, term, include_term):
-        new_data, term_byte, _ = data.partition(KaitaiStream.byte_from_int(term))
-        if include_term:
-            new_data += term_byte
-        return new_data
+        term_index = KaitaiStream.byte_array_index_of(data, term)
+        if term_index == -1:
+            return data[:]
+        return data[:term_index + (1 if include_term else 0)]
 
     # endregion
 
