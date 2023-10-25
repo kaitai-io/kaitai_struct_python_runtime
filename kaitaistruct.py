@@ -14,12 +14,12 @@ from typing import Any, Callable, List, Optional, Type, TypeVar, Union
 # Since ksc 0.10, the compatibility check instead uses the API_VERSION constant,
 # so that the version string does not need to be parsed at runtime
 # (see https://github.com/kaitai-io/kaitai_struct/issues/804).
-__version__ = "0.11.dev1"
+
 
 # Kaitai Struct runtime API version, as a tuple of ints.
 # Used in generated Python code (since ksc 0.10) to check that the imported
 # runtime is compatible with the generated code.
-API_VERSION = (0, 11)
+
 
 # pylint: disable=invalid-name,missing-docstring,too-many-public-methods
 # pylint: disable=useless-object-inheritance,super-with-arguments,consider-using-f-string
