@@ -4,9 +4,8 @@ from enum import Enum
 from io import BytesIO
 from mmap import mmap
 from typing import Any, Callable, List, Optional, Type, TypeVar, Union
+API_VERSION = (0, 11)
 
-PY2: Incomplete
-API_VERSION: Incomplete
 KTStruct = TypeVar("KTStruct", bound="KaitaiStruct")
 KTStream = TypeVar("KTStream", bound="KaitaiStream")
 

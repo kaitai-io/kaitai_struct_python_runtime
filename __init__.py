@@ -1,2 +1,3 @@
-__version__ = "0.11.dev1"
-API_VERSION = (0, 11)
+from kaitaistruct import KaitaiStruct, KaitaiStream, ReadWriteKaitaiStruct
+__version__ = '0.11.dev1'
+__all__ = ['KaitaiStruct', 'KaitaiStream', 'ReadWriteKaitaiStruct']

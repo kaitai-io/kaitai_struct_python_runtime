@@ -5,6 +5,7 @@ from enum import Enum
 from io import BytesIO, SEEK_CUR, open
 from mmap import ACCESS_READ, mmap
 from typing import Any, Callable, List, Optional, Type, TypeVar, Union
+API_VERSION = (0, 11)
 
 # Kaitai Struct runtime version, in the format defined by PEP 440.
 # Used by our setup.cfg to set the version number in
@@ -845,3 +846,7 @@ class ConsistencyError(Exception):
         self.id = attr_id
         self.actual = actual
         self.expected = expected
+
+
+if __name__ == "__main__":
+    pass
