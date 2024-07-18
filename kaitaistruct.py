@@ -409,7 +409,7 @@ class KaitaiStream(object):
 
     def read_bytes_term(self, term, include_term, consume_term, eos_error):
         self.align_to_byte()
-        r = b''
+        r = bytearray()
         while True:
             c = self._io.read(1)
             if c == b'':
@@ -419,14 +419,14 @@ class KaitaiStream(object):
                         (term,)
                     )
 
-                return r
+                return bytes(r)
 
             if ord(c) == term:
                 if include_term:
                     r += c
                 if not consume_term:
                     self._io.seek(-1, SEEK_CUR)
-                return r
+                return bytes(r)
 
             r += c
 
