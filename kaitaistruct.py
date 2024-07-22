@@ -409,10 +409,11 @@ class KaitaiStream(object):
 
     def read_bytes_term(self, term, include_term, consume_term, eos_error):
         self.align_to_byte()
+        term_byte = KaitaiStream.byte_from_int(term)
         r = bytearray()
         while True:
             c = self._io.read(1)
-            if c == b'':
+            if not c:
                 if eos_error:
                     raise Exception(
                         "end of stream reached, but no terminator %d found" %
@@ -421,7 +422,7 @@ class KaitaiStream(object):
 
                 return bytes(r)
 
-            if ord(c) == term:
+            if c == term_byte:
                 if include_term:
                     r += c
                 if not consume_term:
