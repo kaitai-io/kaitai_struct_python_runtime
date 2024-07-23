@@ -431,6 +431,31 @@ class KaitaiStream(object):
 
             r += c
 
+    def read_bytes_term_multi(self, term, include_term, consume_term, eos_error):
+        self.align_to_byte()
+        unit_size = len(term)
+        r = bytearray()
+        while True:
+            c = self._io.read(unit_size)
+            if len(c) < unit_size:
+                if eos_error:
+                    raise Exception(
+                        "end of stream reached, but no terminator %s found" %
+                        (repr(term),)
+                    )
+
+                r += c
+                return bytes(r)
+
+            if c == term:
+                if include_term:
+                    r += c
+                if not consume_term:
+                    self._io.seek(-unit_size, SEEK_CUR)
+                return bytes(r)
+
+            r += c
+
     def ensure_fixed_contents(self, expected):
         actual = self._io.read(len(expected))
         if actual != expected:
@@ -450,6 +475,17 @@ class KaitaiStream(object):
         if term_index == -1:
             return data[:]
         return data[:term_index + (1 if include_term else 0)]
+
+    @staticmethod
+    def bytes_terminate_multi(data, term, include_term):
+        unit_size = len(term)
+        search_idx = data.find(term)
+        while True:
+            if search_idx == -1:
+                return data[:]
+            if search_idx % unit_size == 0:
+                return data[:search_idx + (unit_size if include_term else 0)]
+            search_idx = data.find(term, search_idx + 1)
 
     # endregion
 
