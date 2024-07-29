@@ -483,9 +483,10 @@ class KaitaiStream(object):
         while True:
             if search_index == -1:
                 return data[:]
-            if search_index % unit_size == 0:
+            mod = search_index % unit_size
+            if mod == 0:
                 return data[:search_index + (unit_size if include_term else 0)]
-            search_index = data.find(term, search_index + 1)
+            search_index = data.find(term, search_index + (unit_size - mod))
 
     # endregion
 
