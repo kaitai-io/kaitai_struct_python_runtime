@@ -479,13 +479,13 @@ class KaitaiStream(object):
     @staticmethod
     def bytes_terminate_multi(data, term, include_term):
         unit_size = len(term)
-        search_idx = data.find(term)
+        search_index = data.find(term)
         while True:
-            if search_idx == -1:
+            if search_index == -1:
                 return data[:]
-            if search_idx % unit_size == 0:
-                return data[:search_idx + (unit_size if include_term else 0)]
-            search_idx = data.find(term, search_idx + 1)
+            if search_index % unit_size == 0:
+                return data[:search_index + (unit_size if include_term else 0)]
+            search_index = data.find(term, search_index + 1)
 
     # endregion
 
