@@ -906,6 +906,15 @@ class ValidationNotAnyOfError(ValidationFailedError):
         self.actual = actual
 
 
+class ValidationNotInEnumError(ValidationFailedError):
+    """Signals validation failure: we required "actual" value to be in
+    the enum, but it turned out that it's not.
+    """
+    def __init__(self, actual, io, src_path):
+        super(ValidationNotInEnumError, self).__init__("not in the enum, got %s" % (repr(actual)), io, src_path)
+        self.actual = actual
+
+
 class ValidationExprError(ValidationFailedError):
     """Signals validation failure: we required "actual" value to match
     the expression, but it turned out that it doesn't.
