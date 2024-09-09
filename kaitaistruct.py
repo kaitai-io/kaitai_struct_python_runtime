@@ -2,6 +2,7 @@ import itertools
 import sys
 import struct
 from io import open, BytesIO, SEEK_CUR, SEEK_END  # noqa
+import warnings
 
 PY2 = sys.version_info[0] == 2
 
@@ -322,9 +323,17 @@ class KaitaiStream(object):
 
         return res
 
-    # Unused since Kaitai Struct Compiler v0.9+ - compatibility with
-    # older versions.
     def read_bits_int(self, n):
+        """Deprecated and no longer used as of KSC 0.9. It is only available
+        for backwards compatibility and will be removed in the future.
+
+        KSC 0.9 and later uses `read_bits_int_be()` instead.
+        """
+        warnings.warn(
+            "read_bits_int() is deprecated since 0.9, use read_bits_int_be() instead",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         return self.read_bits_int_be(n)
 
     def read_bits_int_le(self, n):
@@ -457,6 +466,18 @@ class KaitaiStream(object):
             r += c
 
     def ensure_fixed_contents(self, expected):
+        """Deprecated and no longer used as of KSC 0.9. It is only available
+        for backwards compatibility and will be removed in the future.
+
+        KSC 0.9 and later explicitly raises `ValidationNotEqualError` from an
+        `if` statement instead.
+        """
+        warnings.warn(
+            "ensure_fixed_contents() is deprecated since 0.9, explicitly raise "
+            "ValidationNotEqualError from an `if` statement instead",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         actual = self._io.read(len(expected))
         if actual != expected:
             raise Exception(
