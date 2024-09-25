@@ -128,6 +128,9 @@ class KaitaiStream(object):
         return self._io.tell() >= self.size()
 
     def seek(self, n):
+        if n < 0:
+            raise InvalidArgumentError("cannot seek to invalid position %d" % (n,))
+
         if self.bits_write_mode:
             self.write_align_to_byte()
         else:
@@ -376,7 +379,7 @@ class KaitaiStream(object):
 
     def _read_bytes_not_aligned(self, n):
         if n < 0:
-            raise ValueError(
+            raise InvalidArgumentError(
                 "requested invalid %d amount of bytes" %
                 (n,)
             )
@@ -404,9 +407,10 @@ class KaitaiStream(object):
 
         if not is_satisfiable:
             # noinspection PyUnboundLocalVariable
-            raise EOFError(
+            raise EndOfStreamError(
                 "requested %d bytes, but only %d bytes available" %
-                (n, num_bytes_available)
+                (n, num_bytes_available),
+                n, num_bytes_available
             )
 
         # noinspection PyUnboundLocalVariable
@@ -424,10 +428,7 @@ class KaitaiStream(object):
             c = self._io.read(1)
             if not c:
                 if eos_error:
-                    raise Exception(
-                        "end of stream reached, but no terminator %d found" %
-                        (term,)
-                    )
+                    raise NoTerminatorFoundError(term_byte, 0)
 
                 return bytes(r)
 
@@ -448,10 +449,7 @@ class KaitaiStream(object):
             c = self._io.read(unit_size)
             if len(c) < unit_size:
                 if eos_error:
-                    raise Exception(
-                        "end of stream reached, but no terminator %s found" %
-                        (repr(term),)
-                    )
+                    raise NoTerminatorFoundError(term, len(c))
 
                 r += c
                 return bytes(r)
@@ -523,9 +521,10 @@ class KaitaiStream(object):
 
         num_bytes_left = full_size - pos
         if n > num_bytes_left:
-            raise EOFError(
+            raise EndOfStreamError(
                 "requested to write %d bytes, but only %d bytes left in the stream" %
-                (n, num_bytes_left)
+                (n, num_bytes_left),
+                n, num_bytes_left
             )
 
     # region Integer numbers
@@ -739,14 +738,25 @@ class KaitaiStream(object):
 
     def write_bytes_limit(self, buf, size, term, pad_byte):
         n = len(buf)
+        # Strictly speaking, this assertion is redundant because it is already
+        # done in the corresponding _check() method in the generated code, but
+        # it seems to make sense to include it here anyway so that this method
+        # itself does something reasonable for every set of arguments.
+        #
+        # However, it should never be `false` when operated correctly (and in
+        # this case, assigning inconsistent values to fields of a KS-generated
+        # object is considered correct operation if the user application calls
+        # the corresponding _check(), which we know would raise an error and
+        # thus the code should not reach _write() and this method at all). So
+        # it's by design that this throws AssertionError, not any specific
+        # error, because it's not intended to be caught in user applications,
+        # but avoided by calling all _check() methods correctly.
+        assert n <= size, "writing %d bytes, but %d bytes were given" % (size, n)
+
         self.write_bytes(buf)
         if n < size:
             self.write_u1(term)
-            pad_len = size - n - 1
-            for _ in range(pad_len):
-                self.write_u1(pad_byte)
-        elif n > size:
-            raise ValueError("writing %d bytes, but %d bytes were given" % (size, n))
+            self.write_bytes(KaitaiStream.byte_from_int(pad_byte) * (size - n - 1))
 
     # endregion
 
@@ -771,7 +781,7 @@ class KaitaiStream(object):
     @staticmethod
     def process_rotate_left(data, amount, group_size):
         if group_size != 1:
-            raise Exception(
+            raise NotImplementedError(
                 "unable to rotate group of %d bytes yet" %
                 (group_size,)
             )
@@ -861,13 +871,53 @@ class KaitaiStream(object):
 
 
 class KaitaiStructError(Exception):
-    """Common ancestor for all error originating from Kaitai Struct usage.
-    Stores KSY source path, pointing to an element supposedly guilty of
-    an error.
+    """Common ancestor for all errors originating from correct Kaitai Struct
+    usage (i.e. errors that indicate a problem with user input, not errors
+    indicating incorrect usage that are not meant to be caught but fixed in the
+    application code). Use this exception type in the `except` clause if you
+    want to handle all parse errors and serialization errors.
+
+    If available, the `src_path` attribute will contain the KSY source path
+    pointing to the element where the error occurred. If it is not available,
+    `src_path` will be `None`.
     """
     def __init__(self, msg, src_path):
-        super(KaitaiStructError, self).__init__("%s: %s" % (src_path, msg))
+        super(KaitaiStructError, self).__init__(("" if src_path is None else src_path + ": ") + msg)
         self.src_path = src_path
+
+
+class InvalidArgumentError(KaitaiStructError, ValueError):
+    """Indicates that an invalid argument value was received (like `ValueError`),
+    but used in places where this might indicate invalid user input and
+    therefore represents a parse error or serialization error.
+    """
+    def __init__(self, msg):
+        super(InvalidArgumentError, self).__init__(msg, None)
+
+
+class EndOfStreamError(KaitaiStructError, EOFError):
+    """Read or write beyond end of stream. Provides the `bytes_needed` (number
+    of bytes requested to read or write) and `bytes_available` (number of bytes
+    remaining in the stream) attributes.
+    """
+    def __init__(self, msg, bytes_needed, bytes_available):
+        super(EndOfStreamError, self).__init__(msg, None)
+        self.bytes_needed = bytes_needed
+        self.bytes_available = bytes_available
+
+
+class NoTerminatorFoundError(EndOfStreamError):
+    """Special type of `EndOfStreamError` that occurs when end of stream is
+    reached before the required terminator is found. If you want to tolerate a
+    missing terminator, you can specify `eos-error: false` in the KSY
+    specification, in which case the end of stream will be considered a valid
+    end of field and this error will no longer be raised.
+
+    The `term` attribute contains a `bytes` object with the searched terminator.
+    """
+    def __init__(self, term, bytes_available):
+        super(NoTerminatorFoundError, self).__init__("end of stream reached, but no terminator %r found" % (term,), len(term), bytes_available)
+        self.term = term
 
 
 class UndecidedEndiannessError(KaitaiStructError):
