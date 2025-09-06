@@ -26,8 +26,8 @@ API_VERSION = (0, 11)
 
 
 class KaitaiStruct(object):
-    def __init__(self, stream):
-        self._io = stream
+    def __init__(self, io):
+        self._io = io
 
     def __enter__(self):
         return self
@@ -58,6 +58,10 @@ class KaitaiStruct(object):
 
 
 class ReadWriteKaitaiStruct(KaitaiStruct):
+    def __init__(self, io):
+        super(ReadWriteKaitaiStruct, self).__init__(io)
+        self._dirty = True
+
     def _fetch_instances(self):
         raise NotImplementedError()
 
@@ -69,6 +73,14 @@ class ReadWriteKaitaiStruct(KaitaiStruct):
     def _write__seq(self, io):
         if io is not None:
             self._io = io
+        if self._dirty:
+            raise ConsistencyNotCheckedError("consistency not checked: _check() has not been called since the last modification of the object")
+
+    def __setattr__(self, key, value):
+        super_setattr = super(ReadWriteKaitaiStruct, self).__setattr__
+        if not key.startswith('_') or key in {'_parent', '_root'} or key.startswith('_unnamed'):
+            super_setattr('_dirty', True)
+        super_setattr(key, value)
 
 
 class KaitaiStream(object):
@@ -1001,3 +1013,9 @@ class ConsistencyError(Exception):
         self.id = attr_id
         self.actual = actual
         self.expected = expected
+
+
+class ConsistencyNotCheckedError(Exception):
+    """Thrown when attempting to write an object whose consistency hasn't been
+    checked since the last modification."""
+    pass
