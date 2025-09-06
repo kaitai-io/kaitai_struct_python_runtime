@@ -1008,11 +1008,11 @@ class ValidationExprError(ValidationFailedError):
 
 
 class ConsistencyError(Exception):
-    def __init__(self, attr_id, actual, expected):
+    def __init__(self, attr_id, expected, actual):
         super(ConsistencyError, self).__init__("Check failed: %s, expected: %s, actual: %s" % (attr_id, repr(expected), repr(actual)))
         self.id = attr_id
-        self.actual = actual
         self.expected = expected
+        self.actual = actual
 
 
 class ConsistencyNotCheckedError(Exception):
