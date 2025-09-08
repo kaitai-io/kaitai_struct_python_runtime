@@ -1,9 +1,10 @@
-name: Publish to TestPyPI
+name: Publish to TestPyPI and PyPI
 
 on:
   push:
     tags:
       - 'v0.[0-9]+.dev[0-9]+'
+      - 'v0.[0-9]+'
 
 permissions: {}
 
@@ -53,3 +54,24 @@ jobs:
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           repository-url: https://test.pypi.org/legacy/
+
+  publish-to-pypi:
+    name: Publish to PyPI
+    if: |
+      !contains(github.ref, '.dev')
+    runs-on: ubuntu-latest
+    needs:
+      - publish-to-testpypi
+    environment:
+      name: pypi
+      url: https://pypi.org/p/kaitaistruct
+    permissions:
+      id-token: write  # IMPORTANT: mandatory for trusted publishing
+    steps:
+      - name: Download all the dists
+        uses: actions/download-artifact@v5
+        with:
+          name: python-package-distributions
+          path: dist/
+      - name: Publish distribution to TestPyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
