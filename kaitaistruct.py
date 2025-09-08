@@ -14,7 +14,7 @@ PY2 = sys.version_info[0] == 2
 # Since ksc 0.10, the compatibility check instead uses the API_VERSION constant,
 # so that the version string does not need to be parsed at runtime
 # (see https://github.com/kaitai-io/kaitai_struct/issues/804).
-__version__ = '0.11.dev2'
+__version__ = '0.11.dev3'
 
 # Kaitai Struct runtime API version, as a tuple of ints.
 # Used in generated Python code (since ksc 0.10) to check that the imported
