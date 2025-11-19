@@ -1,10 +1,7 @@
 import itertools
-import sys
 import struct
 from io import open, BytesIO, SEEK_CUR, SEEK_END  # noqa
 import warnings
-
-PY2 = sys.version_info[0] == 2
 
 # Kaitai Struct runtime version, in the format defined by PEP 440.
 # Used by our setup.cfg to set the version number in
@@ -95,9 +92,6 @@ class KaitaiStream(object):
 
         try:
             self._size = self.size()
-        # IOError is for Python 2 (IOError also exists in Python 3, but it has
-        # become just an alias for OSError).
-        #
         # Although I haven't actually seen a bare ValueError raised in this case
         # in practice, chances are some implementation may be doing it (see
         # <https://docs.python.org/3/library/io.html#io.IOBase> for reference:
@@ -105,7 +99,7 @@ class KaitaiStream(object):
         # UnsupportedOperation) when operations they do not support are
         # called."). And I've seen ValueError raised at least in Python 2 when
         # calling read() on an unreadable stream.
-        except (OSError, IOError, ValueError):
+        except (OSError, ValueError):
             # tell() or seek() failed - we have a non-seekable stream (which is
             # fine for reading, but writing will fail, see
             # _write_bytes_not_aligned())
@@ -162,18 +156,6 @@ class KaitaiStream(object):
         cur_pos = io.tell()
         # Seek to the end of the stream and remember the full length
         full_size = io.seek(0, SEEK_END)
-
-        if full_size is None:
-            # In Python 2, the seek() method of 'file' objects (created by the
-            # built-in open() function) has no return value, so we have to call
-            # tell() ourselves to get the new absolute position - see
-            # <https://github.com/kaitai-io/kaitai_struct_python_runtime/issues/72>.
-            #
-            # In Python 3, seek() methods of all
-            # <https://docs.python.org/3/library/io.html> streams return the new
-            # position already, so this won't be needed once we drop support for
-            # Python 2.
-            full_size = io.tell()
 
         # Seek back to the current position
         io.seek(cur_pos)
@@ -322,8 +304,6 @@ class KaitaiStream(object):
             # 9 bits => 2 bytes
             bytes_needed = ((bits_needed - 1) // 8) + 1  # `ceil(bits_needed / 8)`
             buf = self._read_bytes_not_aligned(bytes_needed)
-            if PY2:
-                buf = bytearray(buf)
             for byte in buf:
                 res = res << 8 | byte
 
@@ -363,8 +343,6 @@ class KaitaiStream(object):
             # 9 bits => 2 bytes
             bytes_needed = ((bits_needed - 1) // 8) + 1  # `ceil(bits_needed / 8)`
             buf = self._read_bytes_not_aligned(bytes_needed)
-            if PY2:
-                buf = bytearray(buf)
             for i, byte in enumerate(buf):
                 res |= byte << (i * 8)
 
@@ -404,9 +382,6 @@ class KaitaiStream(object):
         # first read the data unconditionally and check the length afterwards.
         if (
             n >= 8*1024*1024  # = 8 MiB
-            # in Python 2, there is a common error ['file' object has no
-            # attribute 'seekable'], so we need to make sure that seekable() exists
-            and callable(getattr(self._io, 'seekable', None))
             and self._io.seekable()
         ):
             num_bytes_available = self.size() - self.pos()
@@ -778,16 +753,10 @@ class KaitaiStream(object):
 
     @staticmethod
     def process_xor_one(data, key):
-        if PY2:
-            return bytes(bytearray(v ^ key for v in bytearray(data)))
-
         return bytes(v ^ key for v in data)
 
     @staticmethod
     def process_xor_many(data, key):
-        if PY2:
-            return bytes(bytearray(a ^ b for a, b in zip(bytearray(data), itertools.cycle(bytearray(key)))))
-
         return bytes(a ^ b for a, b in zip(data, itertools.cycle(key)))
 
     @staticmethod
@@ -811,23 +780,23 @@ class KaitaiStream(object):
 
     @staticmethod
     def int_from_byte(v):
-        return ord(v) if PY2 else v
+        return v
 
     @staticmethod
     def byte_from_int(i):
-        return chr(i) if PY2 else bytes((i,))
+        return bytes((i,))
 
     @staticmethod
     def byte_array_index(data, i):
-        return KaitaiStream.int_from_byte(data[i])
+        return data[i]
 
     @staticmethod
     def byte_array_min(b):
-        return KaitaiStream.int_from_byte(min(b))
+        return min(b)
 
     @staticmethod
     def byte_array_max(b):
-        return KaitaiStream.int_from_byte(max(b))
+        return max(b)
 
     @staticmethod
     def byte_array_index_of(data, b):
@@ -870,10 +839,7 @@ class KaitaiStream(object):
         for child in self.child_streams:
             child.write_back_child_streams(self)
 
-        # NOTE: Python 2 doesn't have list.clear() so it can't be used, see
-        # https://docs.python.org/3.11/library/stdtypes.html#mutable-sequence-types
-        # ("New in version 3.3: clear() and copy() methods.")
-        del self.child_streams[:]
+        self.child_streams.clear()
         self.seek(_pos)
         if parent is not None:
             self._write_back(parent)
