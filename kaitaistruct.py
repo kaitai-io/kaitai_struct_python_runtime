@@ -134,7 +134,7 @@ class KaitaiStream:
 
     def seek(self, n):
         if n < 0:
-            raise InvalidArgumentError("cannot seek to invalid position %d" % (n,))
+            raise InvalidArgumentError("cannot seek to invalid position {}".format(n))
 
         if self.bits_write_mode:
             self.write_align_to_byte()
@@ -369,8 +369,7 @@ class KaitaiStream:
     def _read_bytes_not_aligned(self, n):
         if n < 0:
             raise InvalidArgumentError(
-                "requested invalid %d amount of bytes" %
-                (n,)
+                "requested invalid {} amount of bytes".format(n)
             )
 
         is_satisfiable = True
@@ -394,8 +393,7 @@ class KaitaiStream:
         if not is_satisfiable:
             # noinspection PyUnboundLocalVariable
             raise EndOfStreamError(
-                "requested %d bytes, but only %d bytes available" %
-                (n, num_bytes_available),
+                "requested {} bytes, but only {} bytes available".format(n, num_bytes_available),
                 n, num_bytes_available
             )
 
@@ -465,8 +463,7 @@ class KaitaiStream:
         actual = self._io.read(len(expected))
         if actual != expected:
             raise Exception(
-                "unexpected fixed contents: got %r, was waiting for %r" %
-                (actual, expected)
+                "unexpected fixed contents: got {!r}, was waiting for {!r}".format(actual, expected)
             )
         return actual
 
@@ -508,8 +505,7 @@ class KaitaiStream:
         num_bytes_left = full_size - pos
         if n > num_bytes_left:
             raise EndOfStreamError(
-                "requested to write %d bytes, but only %d bytes left in the stream" %
-                (n, num_bytes_left),
+                "requested to write {} bytes, but only {} bytes left in the stream".format(n, num_bytes_left),
                 n, num_bytes_left
             )
 
@@ -737,7 +733,7 @@ class KaitaiStream:
         # it's by design that this throws AssertionError, not any specific
         # error, because it's not intended to be caught in user applications,
         # but avoided by calling all _check() methods correctly.
-        assert n <= size, "writing %d bytes, but %d bytes were given" % (size, n)
+        assert n <= size, "writing {} bytes, but {} bytes were given".format(size, n)
 
         self.write_bytes(buf)
         if n < size:
@@ -762,8 +758,7 @@ class KaitaiStream:
     def process_rotate_left(data, amount, group_size):
         if group_size != 1:
             raise NotImplementedError(
-                "unable to rotate group of %d bytes yet" %
-                (group_size,)
+                "unable to rotate group of {} bytes yet".format(group_size)
             )
 
         anti_amount = -amount % (group_size * 8)
@@ -911,7 +906,7 @@ class ValidationFailedError(KaitaiStructError):
     KaitaiStream IO object which was involved in an error.
     """
     def __init__(self, msg, io, src_path):
-        super().__init__(("" if io is None else "at pos %d: " % (io.pos(),)) + "validation failed: " + msg, src_path)
+        super().__init__(("" if io is None else "at pos {}: ".format(io.pos())) + "validation failed: " + msg, src_path)
         self.io = io
 
 
@@ -950,7 +945,7 @@ class ValidationNotAnyOfError(ValidationFailedError):
     from the list, but it turned out that it's not.
     """
     def __init__(self, actual, io, src_path):
-        super().__init__("not any of the list, got %s" % (repr(actual)), io, src_path)
+        super().__init__("not any of the list, got {}".format(repr(actual)), io, src_path)
         self.actual = actual
 
 
@@ -959,7 +954,7 @@ class ValidationNotInEnumError(ValidationFailedError):
     the enum, but it turned out that it's not.
     """
     def __init__(self, actual, io, src_path):
-        super().__init__("not in the enum, got %s" % (repr(actual)), io, src_path)
+        super().__init__("not in the enum, got {}".format(repr(actual)), io, src_path)
         self.actual = actual
 
 
@@ -968,7 +963,7 @@ class ValidationExprError(ValidationFailedError):
     the expression, but it turned out that it doesn't.
     """
     def __init__(self, actual, io, src_path):
-        super().__init__("not matching the expression, got %s" % (repr(actual)), io, src_path)
+        super().__init__("not matching the expression, got {}".format(repr(actual)), io, src_path)
         self.actual = actual
 
 
