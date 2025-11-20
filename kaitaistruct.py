@@ -134,7 +134,7 @@ class KaitaiStream:
 
     def seek(self, n):
         if n < 0:
-            raise InvalidArgumentError("cannot seek to invalid position {}".format(n))
+            raise InvalidArgumentError(f"cannot seek to invalid position {n}")
 
         if self.bits_write_mode:
             self.write_align_to_byte()
@@ -369,7 +369,7 @@ class KaitaiStream:
     def _read_bytes_not_aligned(self, n):
         if n < 0:
             raise InvalidArgumentError(
-                "requested invalid {} amount of bytes".format(n)
+                f"requested invalid {n} amount of bytes"
             )
 
         is_satisfiable = True
@@ -393,7 +393,7 @@ class KaitaiStream:
         if not is_satisfiable:
             # noinspection PyUnboundLocalVariable
             raise EndOfStreamError(
-                "requested {} bytes, but only {} bytes available".format(n, num_bytes_available),
+                f"requested {n} bytes, but only {num_bytes_available} bytes available",
                 n, num_bytes_available
             )
 
@@ -463,7 +463,7 @@ class KaitaiStream:
         actual = self._io.read(len(expected))
         if actual != expected:
             raise Exception(
-                "unexpected fixed contents: got {!r}, was waiting for {!r}".format(actual, expected)
+                f"unexpected fixed contents: got {actual!r}, was waiting for {expected!r}"
             )
         return actual
 
@@ -505,7 +505,7 @@ class KaitaiStream:
         num_bytes_left = full_size - pos
         if n > num_bytes_left:
             raise EndOfStreamError(
-                "requested to write {} bytes, but only {} bytes left in the stream".format(n, num_bytes_left),
+                f"requested to write {n} bytes, but only {num_bytes_left} bytes left in the stream",
                 n, num_bytes_left
             )
 
@@ -733,7 +733,7 @@ class KaitaiStream:
         # it's by design that this throws AssertionError, not any specific
         # error, because it's not intended to be caught in user applications,
         # but avoided by calling all _check() methods correctly.
-        assert n <= size, "writing {} bytes, but {} bytes were given".format(size, n)
+        assert n <= size, f"writing {size} bytes, but {n} bytes were given"
 
         self.write_bytes(buf)
         if n < size:
@@ -758,7 +758,7 @@ class KaitaiStream:
     def process_rotate_left(data, amount, group_size):
         if group_size != 1:
             raise NotImplementedError(
-                "unable to rotate group of {} bytes yet".format(group_size)
+                f"unable to rotate group of {group_size} bytes yet"
             )
 
         anti_amount = -amount % (group_size * 8)
@@ -888,7 +888,7 @@ class NoTerminatorFoundError(EndOfStreamError):
     The `term` attribute contains a `bytes` object with the searched terminator.
     """
     def __init__(self, term, bytes_available):
-        super().__init__("end of stream reached, but no terminator {!r} found".format(term), len(term), bytes_available)
+        super().__init__(f"end of stream reached, but no terminator {term!r} found", len(term), bytes_available)
         self.term = term
 
 
@@ -906,7 +906,7 @@ class ValidationFailedError(KaitaiStructError):
     KaitaiStream IO object which was involved in an error.
     """
     def __init__(self, msg, io, src_path):
-        super().__init__(("" if io is None else "at pos {}: ".format(io.pos())) + "validation failed: " + msg, src_path)
+        super().__init__(("" if io is None else f"at pos {io.pos()}: ") + "validation failed: " + msg, src_path)
         self.io = io
 
 
@@ -915,7 +915,7 @@ class ValidationNotEqualError(ValidationFailedError):
     "expected", but it turned out that it's not.
     """
     def __init__(self, expected, actual, io, src_path):
-        super().__init__("not equal, expected {!r}, but got {!r}".format(expected, actual), io, src_path)
+        super().__init__(f"not equal, expected {expected!r}, but got {actual!r}", io, src_path)
         self.expected = expected
         self.actual = actual
 
@@ -925,7 +925,7 @@ class ValidationLessThanError(ValidationFailedError):
     greater than or equal to "min", but it turned out that it's not.
     """
     def __init__(self, min_bound, actual, io, src_path):
-        super().__init__("not in range, min {!r}, but got {!r}".format(min_bound, actual), io, src_path)
+        super().__init__(f"not in range, min {min_bound!r}, but got {actual!r}", io, src_path)
         self.min = min_bound
         self.actual = actual
 
@@ -935,7 +935,7 @@ class ValidationGreaterThanError(ValidationFailedError):
     less than or equal to "max", but it turned out that it's not.
     """
     def __init__(self, max_bound, actual, io, src_path):
-        super().__init__("not in range, max {!r}, but got {!r}".format(max_bound, actual), io, src_path)
+        super().__init__(f"not in range, max {max_bound!r}, but got {actual!r}", io, src_path)
         self.max = max_bound
         self.actual = actual
 
@@ -945,7 +945,7 @@ class ValidationNotAnyOfError(ValidationFailedError):
     from the list, but it turned out that it's not.
     """
     def __init__(self, actual, io, src_path):
-        super().__init__("not any of the list, got {!r}".format(actual), io, src_path)
+        super().__init__(f"not any of the list, got {actual!r}", io, src_path)
         self.actual = actual
 
 
@@ -954,7 +954,7 @@ class ValidationNotInEnumError(ValidationFailedError):
     the enum, but it turned out that it's not.
     """
     def __init__(self, actual, io, src_path):
-        super().__init__("not in the enum, got {!r}".format(actual), io, src_path)
+        super().__init__(f"not in the enum, got {actual!r}", io, src_path)
         self.actual = actual
 
 
@@ -963,13 +963,13 @@ class ValidationExprError(ValidationFailedError):
     the expression, but it turned out that it doesn't.
     """
     def __init__(self, actual, io, src_path):
-        super().__init__("not matching the expression, got {!r}".format(actual), io, src_path)
+        super().__init__(f"not matching the expression, got {actual!r}", io, src_path)
         self.actual = actual
 
 
 class ConsistencyError(Exception):
     def __init__(self, attr_id, expected, actual):
-        super().__init__("Check failed: {}, expected: {!r}, actual: {!r}".format(attr_id, expected, actual))
+        super().__init__(f"Check failed: {attr_id}, expected: {expected!r}, actual: {actual!r}")
         self.id = attr_id
         self.expected = expected
         self.actual = actual
