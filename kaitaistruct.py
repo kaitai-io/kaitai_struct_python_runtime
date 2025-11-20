@@ -915,7 +915,7 @@ class ValidationNotEqualError(ValidationFailedError):
     "expected", but it turned out that it's not.
     """
     def __init__(self, expected, actual, io, src_path):
-        super().__init__("not equal, expected {}, but got {}".format(repr(expected), repr(actual)), io, src_path)
+        super().__init__("not equal, expected {!r}, but got {!r}".format(expected, actual), io, src_path)
         self.expected = expected
         self.actual = actual
 
@@ -925,7 +925,7 @@ class ValidationLessThanError(ValidationFailedError):
     greater than or equal to "min", but it turned out that it's not.
     """
     def __init__(self, min_bound, actual, io, src_path):
-        super().__init__("not in range, min {}, but got {}".format(repr(min_bound), repr(actual)), io, src_path)
+        super().__init__("not in range, min {!r}, but got {!r}".format(min_bound, actual), io, src_path)
         self.min = min_bound
         self.actual = actual
 
@@ -935,7 +935,7 @@ class ValidationGreaterThanError(ValidationFailedError):
     less than or equal to "max", but it turned out that it's not.
     """
     def __init__(self, max_bound, actual, io, src_path):
-        super().__init__("not in range, max {}, but got {}".format(repr(max_bound), repr(actual)), io, src_path)
+        super().__init__("not in range, max {!r}, but got {!r}".format(max_bound, actual), io, src_path)
         self.max = max_bound
         self.actual = actual
 
@@ -945,7 +945,7 @@ class ValidationNotAnyOfError(ValidationFailedError):
     from the list, but it turned out that it's not.
     """
     def __init__(self, actual, io, src_path):
-        super().__init__("not any of the list, got {}".format(repr(actual)), io, src_path)
+        super().__init__("not any of the list, got {!r}".format(actual), io, src_path)
         self.actual = actual
 
 
@@ -954,7 +954,7 @@ class ValidationNotInEnumError(ValidationFailedError):
     the enum, but it turned out that it's not.
     """
     def __init__(self, actual, io, src_path):
-        super().__init__("not in the enum, got {}".format(repr(actual)), io, src_path)
+        super().__init__("not in the enum, got {!r}".format(actual), io, src_path)
         self.actual = actual
 
 
@@ -963,13 +963,13 @@ class ValidationExprError(ValidationFailedError):
     the expression, but it turned out that it doesn't.
     """
     def __init__(self, actual, io, src_path):
-        super().__init__("not matching the expression, got {}".format(repr(actual)), io, src_path)
+        super().__init__("not matching the expression, got {!r}".format(actual), io, src_path)
         self.actual = actual
 
 
 class ConsistencyError(Exception):
     def __init__(self, attr_id, expected, actual):
-        super().__init__("Check failed: {}, expected: {}, actual: {}".format(attr_id, repr(expected), repr(actual)))
+        super().__init__("Check failed: {}, expected: {!r}, actual: {!r}".format(attr_id, expected, actual))
         self.id = attr_id
         self.expected = expected
         self.actual = actual
