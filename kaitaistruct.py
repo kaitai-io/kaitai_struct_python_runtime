@@ -19,7 +19,6 @@ __version__ = '0.11'
 API_VERSION = (0, 11)
 
 # pylint: disable=invalid-name,missing-docstring,too-many-public-methods
-# pylint: disable=useless-object-inheritance,super-with-arguments,consider-using-f-string
 
 
 class KaitaiStruct(object):
