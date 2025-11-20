@@ -1,6 +1,6 @@
 import itertools
 import struct
-from io import open, BytesIO, SEEK_CUR, SEEK_END  # noqa
+from io import BytesIO, SEEK_CUR, SEEK_END  # noqa
 import warnings
 
 # Kaitai Struct runtime version, in the format defined by PEP 440.
@@ -21,7 +21,7 @@ API_VERSION = (0, 11)
 # pylint: disable=invalid-name,missing-docstring,too-many-public-methods
 
 
-class KaitaiStruct(object):
+class KaitaiStruct:
     def __init__(self, io):
         self._io = io
 
@@ -55,7 +55,7 @@ class KaitaiStruct(object):
 
 class ReadWriteKaitaiStruct(KaitaiStruct):
     def __init__(self, io):
-        super(ReadWriteKaitaiStruct, self).__init__(io)
+        super().__init__(io)
         self._dirty = True
 
     def _fetch_instances(self):
@@ -73,13 +73,13 @@ class ReadWriteKaitaiStruct(KaitaiStruct):
             raise ConsistencyNotCheckedError("consistency not checked: _check() has not been called since the last modification of the object")
 
     def __setattr__(self, key, value):
-        super_setattr = super(ReadWriteKaitaiStruct, self).__setattr__
+        super_setattr = super().__setattr__
         if not key.startswith('_') or key in {'_parent', '_root'} or key.startswith('_unnamed'):
             super_setattr('_dirty', True)
         super_setattr(key, value)
 
 
-class KaitaiStream(object):
+class KaitaiStream:
     def __init__(self, io):
         self._io = io
         self.align_to_byte()
@@ -821,7 +821,7 @@ class KaitaiStream(object):
         self.seek(pos)
         return r
 
-    class WriteBackHandler(object):
+    class WriteBackHandler:
         def __init__(self, pos, handler):
             self.pos = pos
             self.handler = handler
@@ -859,7 +859,7 @@ class KaitaiStructError(Exception):
     `src_path` will be `None`.
     """
     def __init__(self, msg, src_path):
-        super(KaitaiStructError, self).__init__(("" if src_path is None else src_path + ": ") + msg)
+        super().__init__(("" if src_path is None else src_path + ": ") + msg)
         self.src_path = src_path
 
 
@@ -869,7 +869,7 @@ class InvalidArgumentError(KaitaiStructError, ValueError):
     therefore represents a parse error or serialization error.
     """
     def __init__(self, msg):
-        super(InvalidArgumentError, self).__init__(msg, None)
+        super().__init__(msg, None)
 
 
 class EndOfStreamError(KaitaiStructError, EOFError):
@@ -878,7 +878,7 @@ class EndOfStreamError(KaitaiStructError, EOFError):
     remaining in the stream) attributes.
     """
     def __init__(self, msg, bytes_needed, bytes_available):
-        super(EndOfStreamError, self).__init__(msg, None)
+        super().__init__(msg, None)
         self.bytes_needed = bytes_needed
         self.bytes_available = bytes_available
 
@@ -893,7 +893,7 @@ class NoTerminatorFoundError(EndOfStreamError):
     The `term` attribute contains a `bytes` object with the searched terminator.
     """
     def __init__(self, term, bytes_available):
-        super(NoTerminatorFoundError, self).__init__("end of stream reached, but no terminator %r found" % (term,), len(term), bytes_available)
+        super().__init__("end of stream reached, but no terminator {!r} found".format(term), len(term), bytes_available)
         self.term = term
 
 
@@ -903,7 +903,7 @@ class UndecidedEndiannessError(KaitaiStructError):
     implies that there should be some positive result).
     """
     def __init__(self, src_path):
-        super(UndecidedEndiannessError, self).__init__("unable to decide on endianness for a type", src_path)
+        super().__init__("unable to decide on endianness for a type", src_path)
 
 
 class ValidationFailedError(KaitaiStructError):
@@ -911,7 +911,7 @@ class ValidationFailedError(KaitaiStructError):
     KaitaiStream IO object which was involved in an error.
     """
     def __init__(self, msg, io, src_path):
-        super(ValidationFailedError, self).__init__(("" if io is None else "at pos %d: " % (io.pos(),)) + "validation failed: " + msg, src_path)
+        super().__init__(("" if io is None else "at pos %d: " % (io.pos(),)) + "validation failed: " + msg, src_path)
         self.io = io
 
 
@@ -920,7 +920,7 @@ class ValidationNotEqualError(ValidationFailedError):
     "expected", but it turned out that it's not.
     """
     def __init__(self, expected, actual, io, src_path):
-        super(ValidationNotEqualError, self).__init__("not equal, expected %s, but got %s" % (repr(expected), repr(actual)), io, src_path)
+        super().__init__("not equal, expected {}, but got {}".format(repr(expected), repr(actual)), io, src_path)
         self.expected = expected
         self.actual = actual
 
@@ -930,7 +930,7 @@ class ValidationLessThanError(ValidationFailedError):
     greater than or equal to "min", but it turned out that it's not.
     """
     def __init__(self, min_bound, actual, io, src_path):
-        super(ValidationLessThanError, self).__init__("not in range, min %s, but got %s" % (repr(min_bound), repr(actual)), io, src_path)
+        super().__init__("not in range, min {}, but got {}".format(repr(min_bound), repr(actual)), io, src_path)
         self.min = min_bound
         self.actual = actual
 
@@ -940,7 +940,7 @@ class ValidationGreaterThanError(ValidationFailedError):
     less than or equal to "max", but it turned out that it's not.
     """
     def __init__(self, max_bound, actual, io, src_path):
-        super(ValidationGreaterThanError, self).__init__("not in range, max %s, but got %s" % (repr(max_bound), repr(actual)), io, src_path)
+        super().__init__("not in range, max {}, but got {}".format(repr(max_bound), repr(actual)), io, src_path)
         self.max = max_bound
         self.actual = actual
 
@@ -950,7 +950,7 @@ class ValidationNotAnyOfError(ValidationFailedError):
     from the list, but it turned out that it's not.
     """
     def __init__(self, actual, io, src_path):
-        super(ValidationNotAnyOfError, self).__init__("not any of the list, got %s" % (repr(actual)), io, src_path)
+        super().__init__("not any of the list, got %s" % (repr(actual)), io, src_path)
         self.actual = actual
 
 
@@ -959,7 +959,7 @@ class ValidationNotInEnumError(ValidationFailedError):
     the enum, but it turned out that it's not.
     """
     def __init__(self, actual, io, src_path):
-        super(ValidationNotInEnumError, self).__init__("not in the enum, got %s" % (repr(actual)), io, src_path)
+        super().__init__("not in the enum, got %s" % (repr(actual)), io, src_path)
         self.actual = actual
 
 
@@ -968,13 +968,13 @@ class ValidationExprError(ValidationFailedError):
     the expression, but it turned out that it doesn't.
     """
     def __init__(self, actual, io, src_path):
-        super(ValidationExprError, self).__init__("not matching the expression, got %s" % (repr(actual)), io, src_path)
+        super().__init__("not matching the expression, got %s" % (repr(actual)), io, src_path)
         self.actual = actual
 
 
 class ConsistencyError(Exception):
     def __init__(self, attr_id, expected, actual):
-        super(ConsistencyError, self).__init__("Check failed: %s, expected: %s, actual: %s" % (attr_id, repr(expected), repr(actual)))
+        super().__init__("Check failed: {}, expected: {}, actual: {}".format(attr_id, repr(expected), repr(actual)))
         self.id = attr_id
         self.expected = expected
         self.actual = actual
