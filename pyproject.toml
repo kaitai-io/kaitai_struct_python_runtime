@@ -1,3 +1,56 @@
 [build-system]
 requires = ["setuptools >= 38.6.0"]
 build-backend = "setuptools.build_meta"
+
+[tool.ruff]
+# The minimum Python version to target (should match `python_requires` in setup.cfg)
+target-version = "py38"
+
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = [
+    # Missing type annotations
+    "ANN",
+    # Trailing commas (the formatter handles this)
+    "COM",
+    # Missing docstrings
+    "D1",
+    # incorrect-blank-line-before-class (that's ugly)
+    "D203",
+    # incorrect-blank-line-after-class (the formatter handles this)
+    "D204",
+    # docstring-tab-indentation (the formatter handles this)
+    "D206",
+    # under-indentation (the formatter handles this)
+    "D207",
+    # over-indentation (the formatter handles this)
+    "D208",
+    # surrounding-whitespace (the formatter handles this)
+    "D210",
+    # blank-line-before-class (the formatter handles this)
+    "D211",
+    # triple-single-quotes (the formatter handles this)
+    "D300",
+    # Indentation (the formatter handles this)
+    "E1",
+    # Whitespace (the formatter handles this)
+    "E2",
+    # # line-too-long
+    # "E501",
+    # pycodestyle warnings (the formatter handles this)
+    "W",
+    # flake8-quotes
+    "Q",
+]
+extend-select = [
+    # multi-line-summary-first-line (not included in
+    # `tool.ruff.lint.pydocstyle.convention = "pep257"`)
+    "D212",
+]
+
+[tool.ruff.lint.pydocstyle]
+convention = "pep257"
+
+[tool.ruff.format]
+# Like Black, use double quotes for strings.
+quote-style = "double"
