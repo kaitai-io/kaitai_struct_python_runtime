@@ -70,7 +70,7 @@ class ReadWriteKaitaiStruct(KaitaiStruct):
         if io is not None:
             self._io = io
         if self._dirty:
-            raise ConsistencyNotCheckedError("consistency not checked: _check() has not been called since the last modification of the object")
+            raise ConsistencyNotCheckedError()
 
     def __setattr__(self, key, value):
         super_setattr = super().__setattr__
@@ -978,4 +978,5 @@ class ConsistencyError(Exception):
 class ConsistencyNotCheckedError(Exception):
     """Thrown when attempting to write an object whose consistency hasn't been
     checked since the last modification."""
-    pass
+    def __init__(self):
+        super().__init__("consistency not checked: _check() has not been called since the last modification of the object")
