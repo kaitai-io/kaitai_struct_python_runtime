@@ -41,6 +41,8 @@ ignore = [
     "W",
     # flake8-quotes
     "Q",
+    # raise-vanilla-args (not considered beneficial)
+    "TRY003",
 ]
 extend-select = [
     # multi-line-summary-first-line (not included in
