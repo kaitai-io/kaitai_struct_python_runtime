@@ -1,7 +1,7 @@
 import itertools
 import struct
-from io import BytesIO, SEEK_CUR, SEEK_END  # noqa
 import warnings
+from io import SEEK_CUR, SEEK_END, BytesIO
 
 # Kaitai Struct runtime version, in the format defined by PEP 440.
 # Used by our setup.cfg to set the version number in
@@ -59,7 +59,7 @@ class ReadWriteKaitaiStruct(KaitaiStruct):
         self._dirty = True
 
     def _fetch_instances(self):
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def _write(self, io=None):
         self._write__seq(io)
@@ -70,7 +70,7 @@ class ReadWriteKaitaiStruct(KaitaiStruct):
         if io is not None:
             self._io = io
         if self._dirty:
-            raise ConsistencyNotCheckedError()
+            raise ConsistencyNotCheckedError
 
     def __setattr__(self, key, value):
         super_setattr = super().__setattr__
@@ -977,6 +977,7 @@ class ConsistencyError(Exception):
 
 class ConsistencyNotCheckedError(Exception):
     """Thrown when attempting to write an object whose consistency hasn't been
-    checked since the last modification."""
+    checked since the last modification.
+    """
     def __init__(self):
         super().__init__("consistency not checked: _check() has not been called since the last modification of the object")
