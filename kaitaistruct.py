@@ -134,7 +134,8 @@ class KaitaiStream:
 
     def seek(self, n):
         if n < 0:
-            raise InvalidArgumentError(f"cannot seek to invalid position {n}")
+            msg = f"cannot seek to invalid position {n}"
+            raise InvalidArgumentError(msg)
 
         if self.bits_write_mode:
             self.write_align_to_byte()
@@ -368,8 +369,9 @@ class KaitaiStream:
 
     def _read_bytes_not_aligned(self, n):
         if n < 0:
+            msg = f"requested invalid {n} amount of bytes"
             raise InvalidArgumentError(
-                f"requested invalid {n} amount of bytes"
+                msg
             )
 
         is_satisfiable = True
@@ -392,8 +394,9 @@ class KaitaiStream:
 
         if not is_satisfiable:
             # noinspection PyUnboundLocalVariable
+            msg = f"requested {n} bytes, but only {num_bytes_available} bytes available"
             raise EndOfStreamError(
-                f"requested {n} bytes, but only {num_bytes_available} bytes available",
+                msg,
                 n, num_bytes_available
             )
 
@@ -462,8 +465,9 @@ class KaitaiStream:
         )
         actual = self._io.read(len(expected))
         if actual != expected:
+            msg = f"unexpected fixed contents: got {actual!r}, was waiting for {expected!r}"
             raise Exception(
-                f"unexpected fixed contents: got {actual!r}, was waiting for {expected!r}"
+                msg
             )
         return actual
 
@@ -500,12 +504,14 @@ class KaitaiStream:
         try:
             full_size = self._size
         except AttributeError:
-            raise ValueError("writing to non-seekable streams is not supported")
+            msg = "writing to non-seekable streams is not supported"
+            raise ValueError(msg)
 
         num_bytes_left = full_size - pos
         if n > num_bytes_left:
+            msg = f"requested to write {n} bytes, but only {num_bytes_left} bytes left in the stream"
             raise EndOfStreamError(
-                f"requested to write {n} bytes, but only {num_bytes_left} bytes left in the stream",
+                msg,
                 n, num_bytes_left
             )
 
@@ -757,8 +763,9 @@ class KaitaiStream:
     @staticmethod
     def process_rotate_left(data, amount, group_size):
         if group_size != 1:
+            msg = f"unable to rotate group of {group_size} bytes yet"
             raise NotImplementedError(
-                f"unable to rotate group of {group_size} bytes yet"
+                msg
             )
 
         anti_amount = -amount % (group_size * 8)
