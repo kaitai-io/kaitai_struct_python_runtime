@@ -11,7 +11,7 @@ from io import SEEK_CUR, SEEK_END, BytesIO
 # Since ksc 0.10, the compatibility check instead uses the API_VERSION constant,
 # so that the version string does not need to be parsed at runtime
 # (see https://github.com/kaitai-io/kaitai_struct/issues/804).
-__version__ = '0.11'
+__version__ = "0.11"
 
 # Kaitai Struct runtime API version, as a tuple of ints.
 # Used in generated Python code (since ksc 0.10) to check that the imported
@@ -36,7 +36,7 @@ class KaitaiStruct:
 
     @classmethod
     def from_file(cls, filename):
-        f = open(filename, 'rb')
+        f = open(filename, "rb")
         try:
             return cls(KaitaiStream(f))
         except Exception:
@@ -74,8 +74,12 @@ class ReadWriteKaitaiStruct(KaitaiStruct):
 
     def __setattr__(self, key, value):
         super_setattr = super().__setattr__
-        if not key.startswith('_') or key in {'_parent', '_root'} or key.startswith('_unnamed'):
-            super_setattr('_dirty', True)
+        if (
+            not key.startswith("_")
+            or key in {"_parent", "_root"}
+            or key.startswith("_unnamed")
+        ):
+            super_setattr("_dirty", True)
         super_setattr(key, value)
 
 
@@ -145,7 +149,9 @@ class KaitaiStream:
         self._io.seek(n)
 
     def pos(self):
-        return self._io.tell() + (1 if self.bits_write_mode and self.bits_left > 0 else 0)
+        return self._io.tell() + (
+            1 if self.bits_write_mode and self.bits_left > 0 else 0
+        )
 
     def size(self):
         # Python has no internal File object API function to get
@@ -165,26 +171,26 @@ class KaitaiStream:
 
     # region Structs for numeric types
 
-    packer_s1 = struct.Struct('b')
-    packer_s2be = struct.Struct('>h')
-    packer_s4be = struct.Struct('>i')
-    packer_s8be = struct.Struct('>q')
-    packer_s2le = struct.Struct('<h')
-    packer_s4le = struct.Struct('<i')
-    packer_s8le = struct.Struct('<q')
+    packer_s1 = struct.Struct("b")
+    packer_s2be = struct.Struct(">h")
+    packer_s4be = struct.Struct(">i")
+    packer_s8be = struct.Struct(">q")
+    packer_s2le = struct.Struct("<h")
+    packer_s4le = struct.Struct("<i")
+    packer_s8le = struct.Struct("<q")
 
-    packer_u1 = struct.Struct('B')
-    packer_u2be = struct.Struct('>H')
-    packer_u4be = struct.Struct('>I')
-    packer_u8be = struct.Struct('>Q')
-    packer_u2le = struct.Struct('<H')
-    packer_u4le = struct.Struct('<I')
-    packer_u8le = struct.Struct('<Q')
+    packer_u1 = struct.Struct("B")
+    packer_u2be = struct.Struct(">H")
+    packer_u4be = struct.Struct(">I")
+    packer_u8be = struct.Struct(">Q")
+    packer_u2le = struct.Struct("<H")
+    packer_u4le = struct.Struct("<I")
+    packer_u8le = struct.Struct("<Q")
 
-    packer_f4be = struct.Struct('>f')
-    packer_f8be = struct.Struct('>d')
-    packer_f4le = struct.Struct('<f')
-    packer_f8le = struct.Struct('<d')
+    packer_f4be = struct.Struct(">f")
+    packer_f8be = struct.Struct(">d")
+    packer_f4le = struct.Struct("<f")
+    packer_f8le = struct.Struct("<d")
 
     # endregion
 
@@ -355,7 +361,9 @@ class KaitaiStream:
 
         self.bits_left = -bits_needed % 8
 
-        mask = (1 << n) - 1  # no problem with this in Python (arbitrary precision integers)
+        mask = (
+            1 << n
+        ) - 1  # no problem with this in Python (arbitrary precision integers)
         res &= mask
         return res
 
@@ -370,9 +378,7 @@ class KaitaiStream:
     def _read_bytes_not_aligned(self, n):
         if n < 0:
             msg = f"requested invalid {n} amount of bytes"
-            raise InvalidArgumentError(
-                msg
-            )
+            raise InvalidArgumentError(msg)
 
         is_satisfiable = True
         # When a large number of bytes is requested, try to check first
@@ -381,24 +387,21 @@ class KaitaiStream:
         # that it's not long enough. For smaller amounts of data, it's faster to
         # first read the data unconditionally and check the length afterwards.
         if (
-            n >= 8*1024*1024  # = 8 MiB
+            n >= 8 * 1024 * 1024  # = 8 MiB
             and self._io.seekable()
         ):
             num_bytes_available = self.size() - self.pos()
-            is_satisfiable = (n <= num_bytes_available)
+            is_satisfiable = n <= num_bytes_available
 
         if is_satisfiable:
             r = self._io.read(n)
             num_bytes_available = len(r)
-            is_satisfiable = (n <= num_bytes_available)
+            is_satisfiable = n <= num_bytes_available
 
         if not is_satisfiable:
             # noinspection PyUnboundLocalVariable
             msg = f"requested {n} bytes, but only {num_bytes_available} bytes available"
-            raise EndOfStreamError(
-                msg,
-                n, num_bytes_available
-            )
+            raise EndOfStreamError(msg, n, num_bytes_available)
 
         # noinspection PyUnboundLocalVariable
         return r
@@ -466,9 +469,7 @@ class KaitaiStream:
         actual = self._io.read(len(expected))
         if actual != expected:
             msg = f"unexpected fixed contents: got {actual!r}, was waiting for {expected!r}"
-            raise Exception(
-                msg
-            )
+            raise Exception(msg)
         return actual
 
     @staticmethod
@@ -480,7 +481,7 @@ class KaitaiStream:
         term_index = KaitaiStream.byte_array_index_of(data, term)
         if term_index == -1:
             return data[:]
-        return data[:term_index + (1 if include_term else 0)]
+        return data[: term_index + (1 if include_term else 0)]
 
     @staticmethod
     def bytes_terminate_multi(data, term, include_term):
@@ -491,7 +492,7 @@ class KaitaiStream:
                 return data[:]
             mod = search_index % unit_size
             if mod == 0:
-                return data[:search_index + (unit_size if include_term else 0)]
+                return data[: search_index + (unit_size if include_term else 0)]
             search_index = data.find(term, search_index + (unit_size - mod))
 
     # endregion
@@ -510,10 +511,7 @@ class KaitaiStream:
         num_bytes_left = full_size - pos
         if n > num_bytes_left:
             msg = f"requested to write {n} bytes, but only {num_bytes_left} bytes left in the stream"
-            raise EndOfStreamError(
-                msg,
-                n, num_bytes_left
-            )
+            raise EndOfStreamError(msg, n, num_bytes_left)
 
     # region Integer numbers
 
@@ -647,7 +645,9 @@ class KaitaiStream:
         self.bits_le = False
         self.bits_write_mode = True
 
-        mask = (1 << n) - 1  # no problem with this in Python (arbitrary precision integers)
+        mask = (
+            1 << n
+        ) - 1  # no problem with this in Python (arbitrary precision integers)
         val &= mask
 
         bits_to_write = self.bits_left + n
@@ -657,7 +657,9 @@ class KaitaiStream:
         # returns the stream position as if it were already aligned on a byte
         # boundary), which ensures that we report the same numbers of bytes here
         # as read_bits_int_*() methods would.
-        self._ensure_bytes_left_to_write(bytes_needed - (1 if self.bits_left > 0 else 0), self.pos())
+        self._ensure_bytes_left_to_write(
+            bytes_needed - (1 if self.bits_left > 0 else 0), self.pos()
+        )
 
         bytes_to_write = bits_to_write // 8
         self.bits_left = bits_to_write % 8
@@ -671,7 +673,7 @@ class KaitaiStream:
             self.bits = new_bits
 
             for i in range(bytes_to_write - 1, -1, -1):
-                buf[i] = val & 0xff
+                buf[i] = val & 0xFF
                 val >>= 8
             self._write_bytes_not_aligned(buf)
         else:
@@ -688,7 +690,9 @@ class KaitaiStream:
         # returns the stream position as if it were already aligned on a byte
         # boundary), which ensures that we report the same numbers of bytes here
         # as read_bits_int_*() methods would.
-        self._ensure_bytes_left_to_write(bytes_needed - (1 if self.bits_left > 0 else 0), self.pos())
+        self._ensure_bytes_left_to_write(
+            bytes_needed - (1 if self.bits_left > 0 else 0), self.pos()
+        )
 
         bytes_to_write = bits_to_write // 8
         old_bits_left = self.bits_left
@@ -697,12 +701,14 @@ class KaitaiStream:
         if bytes_to_write > 0:
             buf = bytearray(bytes_to_write)
 
-            new_bits = val >> (n - self.bits_left)  # no problem with this in Python (arbitrary precision integers)
+            new_bits = val >> (
+                n - self.bits_left
+            )  # no problem with this in Python (arbitrary precision integers)
             val = val << old_bits_left | self.bits
             self.bits = new_bits
 
             for i in range(bytes_to_write):
-                buf[i] = val & 0xff
+                buf[i] = val & 0xFF
                 val >>= 8
             self._write_bytes_not_aligned(buf)
         else:
@@ -764,15 +770,13 @@ class KaitaiStream:
     def process_rotate_left(data, amount, group_size):
         if group_size != 1:
             msg = f"unable to rotate group of {group_size} bytes yet"
-            raise NotImplementedError(
-                msg
-            )
+            raise NotImplementedError(msg)
 
         anti_amount = -amount % (group_size * 8)
 
         r = bytearray(data)
         for i, byte in enumerate(r):
-            r[i] = (byte << amount) & 0xff | (byte >> anti_amount)
+            r[i] = (byte << amount) & 0xFF | (byte >> anti_amount)
         return bytes(r)
 
     # endregion
@@ -860,6 +864,7 @@ class KaitaiStructError(Exception):
     pointing to the element where the error occurred. If it is not available,
     `src_path` will be `None`.
     """
+
     def __init__(self, msg, src_path):
         super().__init__(("" if src_path is None else src_path + ": ") + msg)
         self.src_path = src_path
@@ -870,6 +875,7 @@ class InvalidArgumentError(KaitaiStructError, ValueError):
     but used in places where this might indicate invalid user input and
     therefore represents a parse error or serialization error.
     """
+
     def __init__(self, msg):
         super().__init__(msg, None)
 
@@ -879,6 +885,7 @@ class EndOfStreamError(KaitaiStructError, EOFError):
     of bytes requested to read or write) and `bytes_available` (number of bytes
     remaining in the stream) attributes.
     """
+
     def __init__(self, msg, bytes_needed, bytes_available):
         super().__init__(msg, None)
         self.bytes_needed = bytes_needed
@@ -894,8 +901,13 @@ class NoTerminatorFoundError(EndOfStreamError):
 
     The `term` attribute contains a `bytes` object with the searched terminator.
     """
+
     def __init__(self, term, bytes_available):
-        super().__init__(f"end of stream reached, but no terminator {term!r} found", len(term), bytes_available)
+        super().__init__(
+            f"end of stream reached, but no terminator {term!r} found",
+            len(term),
+            bytes_available,
+        )
         self.term = term
 
 
@@ -904,6 +916,7 @@ class UndecidedEndiannessError(KaitaiStructError):
     switch, but nothing matches (although using endianness expression
     implies that there should be some positive result).
     """
+
     def __init__(self, src_path):
         super().__init__("unable to decide on endianness for a type", src_path)
 
@@ -912,8 +925,14 @@ class ValidationFailedError(KaitaiStructError):
     """Common ancestor for all validation failures. Stores pointer to
     KaitaiStream IO object which was involved in an error.
     """
+
     def __init__(self, msg, io, src_path):
-        super().__init__(("" if io is None else f"at pos {io.pos()}: ") + "validation failed: " + msg, src_path)
+        super().__init__(
+            ("" if io is None else f"at pos {io.pos()}: ")
+            + "validation failed: "
+            + msg,
+            src_path,
+        )
         self.io = io
 
 
@@ -921,8 +940,11 @@ class ValidationNotEqualError(ValidationFailedError):
     """Signals validation failure: we required "actual" value to be equal to
     "expected", but it turned out that it's not.
     """
+
     def __init__(self, expected, actual, io, src_path):
-        super().__init__(f"not equal, expected {expected!r}, but got {actual!r}", io, src_path)
+        super().__init__(
+            f"not equal, expected {expected!r}, but got {actual!r}", io, src_path
+        )
         self.expected = expected
         self.actual = actual
 
@@ -931,8 +953,11 @@ class ValidationLessThanError(ValidationFailedError):
     """Signals validation failure: we required "actual" value to be
     greater than or equal to "min", but it turned out that it's not.
     """
+
     def __init__(self, min_bound, actual, io, src_path):
-        super().__init__(f"not in range, min {min_bound!r}, but got {actual!r}", io, src_path)
+        super().__init__(
+            f"not in range, min {min_bound!r}, but got {actual!r}", io, src_path
+        )
         self.min = min_bound
         self.actual = actual
 
@@ -941,8 +966,11 @@ class ValidationGreaterThanError(ValidationFailedError):
     """Signals validation failure: we required "actual" value to be
     less than or equal to "max", but it turned out that it's not.
     """
+
     def __init__(self, max_bound, actual, io, src_path):
-        super().__init__(f"not in range, max {max_bound!r}, but got {actual!r}", io, src_path)
+        super().__init__(
+            f"not in range, max {max_bound!r}, but got {actual!r}", io, src_path
+        )
         self.max = max_bound
         self.actual = actual
 
@@ -951,6 +979,7 @@ class ValidationNotAnyOfError(ValidationFailedError):
     """Signals validation failure: we required "actual" value to be
     from the list, but it turned out that it's not.
     """
+
     def __init__(self, actual, io, src_path):
         super().__init__(f"not any of the list, got {actual!r}", io, src_path)
         self.actual = actual
@@ -960,6 +989,7 @@ class ValidationNotInEnumError(ValidationFailedError):
     """Signals validation failure: we required "actual" value to be in
     the enum, but it turned out that it's not.
     """
+
     def __init__(self, actual, io, src_path):
         super().__init__(f"not in the enum, got {actual!r}", io, src_path)
         self.actual = actual
@@ -969,6 +999,7 @@ class ValidationExprError(ValidationFailedError):
     """Signals validation failure: we required "actual" value to match
     the expression, but it turned out that it doesn't.
     """
+
     def __init__(self, actual, io, src_path):
         super().__init__(f"not matching the expression, got {actual!r}", io, src_path)
         self.actual = actual
@@ -976,7 +1007,9 @@ class ValidationExprError(ValidationFailedError):
 
 class ConsistencyError(Exception):
     def __init__(self, attr_id, expected, actual):
-        super().__init__(f"Check failed: {attr_id}, expected: {expected!r}, actual: {actual!r}")
+        super().__init__(
+            f"Check failed: {attr_id}, expected: {expected!r}, actual: {actual!r}"
+        )
         self.id = attr_id
         self.expected = expected
         self.actual = actual
@@ -986,5 +1019,8 @@ class ConsistencyNotCheckedError(Exception):
     """Thrown when attempting to write an object whose consistency hasn't been
     checked since the last modification.
     """
+
     def __init__(self):
-        super().__init__("consistency not checked: _check() has not been called since the last modification of the object")
+        super().__init__(
+            "consistency not checked: _check() has not been called since the last modification of the object"
+        )
