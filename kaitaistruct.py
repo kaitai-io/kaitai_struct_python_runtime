@@ -1,6 +1,7 @@
 import itertools
 import struct
 import warnings
+from contextlib import suppress
 from io import SEEK_CUR, SEEK_END, BytesIO
 
 # Kaitai Struct runtime version, in the format defined by PEP 440.
@@ -36,7 +37,15 @@ class KaitaiStruct:
 
     @classmethod
     def from_file(cls, filename):
-        f = open(filename, "rb")
+        # NOTE: we cannot use the `with` statement because KaitaiStream needs a
+        # file descriptor that remains open and takes care of closing it itself.
+        # Therefore, we're suppressing Ruff's rule
+        # [SIM115](https://docs.astral.sh/ruff/rules/open-file-with-context-handler/).
+        #
+        # We also won't use `pathlib` here (so we're suppressing
+        # [PTH123](https://docs.astral.sh/ruff/rules/builtin-open/)), because
+        # `filename` is traditionally expected to be a string.
+        f = open(filename, "rb")  # noqa: SIM115, PTH123
         try:
             return cls(KaitaiStream(f))
         except Exception:
@@ -79,7 +88,9 @@ class ReadWriteKaitaiStruct(KaitaiStruct):
             or key in {"_parent", "_root"}
             or key.startswith("_unnamed")
         ):
-            super_setattr("_dirty", True)
+            # NOTE: `__setattr__()` parameters are positional-only, which the FBT003
+            # rule doesn't know, see https://github.com/astral-sh/ruff/issues/3247
+            super_setattr("_dirty", True)  # noqa: FBT003
         super_setattr(key, value)
 
 
@@ -93,8 +104,13 @@ class KaitaiStream:
         self.write_back_handler = None
         self.child_streams = []
 
-        try:
-            self._size = self.size()
+        # The size() method calls tell() and seek(), which will fail when called
+        # on a non-seekable stream. Non-seekable streams are supported for
+        # reading, so this is not fatal and we need to suppress these errors.
+        # Writing to a non-seekable stream (i.e. without the `_size` attribute)
+        # is currently not supported and will fail, but at this point we don't
+        # know whether any writing will be attempted on this stream.
+        #
         # Although I haven't actually seen a bare ValueError raised in this case
         # in practice, chances are some implementation may be doing it (see
         # <https://docs.python.org/3/library/io.html#io.IOBase> for reference:
@@ -102,11 +118,8 @@ class KaitaiStream:
         # UnsupportedOperation) when operations they do not support are
         # called."). And I've seen ValueError raised at least in Python 2 when
         # calling read() on an unreadable stream.
-        except (OSError, ValueError):
-            # tell() or seek() failed - we have a non-seekable stream (which is
-            # fine for reading, but writing will fail, see
-            # _write_bytes_not_aligned())
-            pass
+        with suppress(OSError, ValueError):
+            self._size = self.size()
 
     def __enter__(self):
         return self
@@ -469,7 +482,9 @@ class KaitaiStream:
         actual = self._io.read(len(expected))
         if actual != expected:
             msg = f"unexpected fixed contents: got {actual!r}, was waiting for {expected!r}"
-            raise Exception(msg)
+            # NOTE: this method has always raised `Exception` directly and is now
+            # unused and slated for removal, so there's no point in "fixing" it.
+            raise Exception(msg)  # noqa: TRY002
         return actual
 
     @staticmethod
@@ -506,7 +521,7 @@ class KaitaiStream:
             full_size = self._size
         except AttributeError:
             msg = "writing to non-seekable streams is not supported"
-            raise ValueError(msg)
+            raise ValueError(msg) from None
 
         num_bytes_left = full_size - pos
         if n > num_bytes_left:
@@ -732,20 +747,22 @@ class KaitaiStream:
 
     def write_bytes_limit(self, buf, size, term, pad_byte):
         n = len(buf)
-        # Strictly speaking, this assertion is redundant because it is already
+        # Strictly speaking, this check is redundant because it is already
         # done in the corresponding _check() method in the generated code, but
         # it seems to make sense to include it here anyway so that this method
         # itself does something reasonable for every set of arguments.
         #
-        # However, it should never be `false` when operated correctly (and in
+        # However, it should never happen when operated correctly (and in
         # this case, assigning inconsistent values to fields of a KS-generated
         # object is considered correct operation if the user application calls
         # the corresponding _check(), which we know would raise an error and
         # thus the code should not reach _write() and this method at all). So
-        # it's by design that this throws AssertionError, not any specific
+        # it's by design that this throws ValueError, not any more specific
         # error, because it's not intended to be caught in user applications,
         # but avoided by calling all _check() methods correctly.
-        assert n <= size, f"writing {size} bytes, but {n} bytes were given"
+        if n > size:
+            msg = f"writing {size} bytes, but {n} bytes were given"
+            raise ValueError(msg)
 
         self.write_bytes(buf)
         if n < size:
