@@ -310,6 +310,7 @@ class KaitaiStream:
         self.bits = 0
 
     def read_bits_int_be(self, n):
+        """Read an unsigned `n`-bit integer in big-endian parsing direction."""
         self.bits_write_mode = False
 
         res = 0
@@ -338,7 +339,9 @@ class KaitaiStream:
         return res
 
     def read_bits_int(self, n):
-        """Deprecated and no longer used as of KSC 0.9. It is only available
+        """Read an unsigned `n`-bit integer in big-endian parsing direction.
+
+        Deprecated and no longer used as of KSC 0.9. It is only available
         for backwards compatibility and will be removed in the future.
 
         KSC 0.9 and later uses `read_bits_int_be()` instead.
@@ -351,6 +354,7 @@ class KaitaiStream:
         return self.read_bits_int_be(n)
 
     def read_bits_int_le(self, n):
+        """Read an unsigned `n`-bit integer in little-endian parsing direction."""
         self.bits_write_mode = False
 
         res = 0
@@ -467,7 +471,9 @@ class KaitaiStream:
             r += c
 
     def ensure_fixed_contents(self, expected):
-        """Deprecated and no longer used as of KSC 0.9. It is only available
+        """Check that the `expected` bytes follow in the stream.
+
+        Deprecated and no longer used as of KSC 0.9. It is only available
         for backwards compatibility and will be removed in the future.
 
         KSC 0.9 and later explicitly raises `ValidationNotEqualError` from an
@@ -826,9 +832,16 @@ class KaitaiStream:
 
     @staticmethod
     def resolve_enum(enum_obj, value):
-        """Resolves value using enum: if the value is not found in the map,
-        we'll just use literal value per se. Works around problem with Python
-        enums throwing an exception when encountering unknown value.
+        """Convert an integer to the given enum if possible, otherwise return it back.
+
+        Enums in Python raise a `ValueError` exception when they encounter an unknown
+        value. This method works around this issue so that attempting to convert an
+        unknown integer value to an enum does not stop parsing by default.
+
+        If it is desired to stop parsing on unknown enum values, `valid/in-enum: true`
+        can be used in the .ksy specification on a specific `seq` or `instances` enum
+        field. This adds validation that the field contains one of the known (defined)
+        enum values, otherwise a `ValidationNotInEnumError` exception is raised.
         """
         try:
             return enum_obj(value)
@@ -871,11 +884,14 @@ class KaitaiStream:
 
 
 class KaitaiStructError(Exception):
-    """Common ancestor for all errors originating from correct Kaitai Struct
-    usage (i.e. errors that indicate a problem with user input, not errors
-    indicating incorrect usage that are not meant to be caught but fixed in the
-    application code). Use this exception type in the `except` clause if you
-    want to handle all parse errors and serialization errors.
+    """Common ancestor for all errors originating from correct Kaitai Struct usage.
+
+    Use this exception class in the `except` clause if you want to handle all
+    parse errors and serialization errors.
+
+    "Correct usage" refers to errors that indicate a problem with user input,
+    not errors indicating incorrect usage, which are not meant to be caught but
+    fixed in the application code.
 
     If available, the `src_path` attribute will contain the KSY source path
     pointing to the element where the error occurred. If it is not available,
@@ -888,9 +904,12 @@ class KaitaiStructError(Exception):
 
 
 class InvalidArgumentError(KaitaiStructError, ValueError):
-    """Indicates that an invalid argument value was received (like `ValueError`),
-    but used in places where this might indicate invalid user input and
-    therefore represents a parse error or serialization error.
+    """Raised when an invalid argument is encountered during parsing or serialization.
+
+    This is a subclass of `ValueError`, which is the standard built-in exception
+    class for invalid arguments in Python. It is also a subclass of
+    `KaitaiStructError`, as it indicates invalid user input and therefore
+    represents a parsing or serialization error.
     """
 
     def __init__(self, msg):
@@ -898,9 +917,10 @@ class InvalidArgumentError(KaitaiStructError, ValueError):
 
 
 class EndOfStreamError(KaitaiStructError, EOFError):
-    """Read or write beyond end of stream. Provides the `bytes_needed` (number
-    of bytes requested to read or write) and `bytes_available` (number of bytes
-    remaining in the stream) attributes.
+    """Raised when attempting to read or write beyond end of stream.
+
+    Provides the `bytes_needed` (number of bytes requested to read or write) and
+    `bytes_available` (number of bytes remaining in the stream) attributes.
     """
 
     def __init__(self, msg, bytes_needed, bytes_available):
@@ -910,11 +930,17 @@ class EndOfStreamError(KaitaiStructError, EOFError):
 
 
 class NoTerminatorFoundError(EndOfStreamError):
-    """Special type of `EndOfStreamError` that occurs when end of stream is
-    reached before the required terminator is found. If you want to tolerate a
-    missing terminator, you can specify `eos-error: false` in the KSY
-    specification, in which case the end of stream will be considered a valid
-    end of field and this error will no longer be raised.
+    """Raised when end of stream is reached before the required terminator is found.
+
+    This is a subclass of `EndOfStreamError` because it is a special type of
+    reaching the end of the stream prematurely - see
+    https://github.com/kaitai-io/kaitai_struct_python_runtime/issues/41 for an
+    explanation.
+
+    If you want to tolerate a missing terminator, you can specify `eos-error: false`
+    in the .ksy specification. Reaching the end of the stream will then be
+    considered a valid end of the field, and this error will no longer be
+    raised.
 
     The `term` attribute contains a `bytes` object with the searched terminator.
     """
@@ -929,9 +955,11 @@ class NoTerminatorFoundError(EndOfStreamError):
 
 
 class UndecidedEndiannessError(KaitaiStructError):
-    """Error that occurs when default endianness should be decided with
-    switch, but nothing matches (although using endianness expression
-    implies that there should be some positive result).
+    """Raised when the calculated default endianness cannot be determined.
+
+    The default endianness should have been decided with a switch, but no case
+    matches (although the endianness switch suggests that the result should be
+    positive).
     """
 
     def __init__(self, src_path):
@@ -939,8 +967,12 @@ class UndecidedEndiannessError(KaitaiStructError):
 
 
 class ValidationFailedError(KaitaiStructError):
-    """Common ancestor for all validation failures. Stores pointer to
-    KaitaiStream IO object which was involved in an error.
+    """Common ancestor for all validation failures.
+
+    The `io` attribute stores the `KaitaiStream` object representing the I/O
+    stream associated with the error. Validation exceptions raised from
+    `_check()` methods do not have an I/O stream available, so their `io` will
+    be `None`.
     """
 
     def __init__(self, msg, io, src_path):
@@ -954,8 +986,16 @@ class ValidationFailedError(KaitaiStructError):
 
 
 class ValidationNotEqualError(ValidationFailedError):
-    """Signals validation failure: we required "actual" value to be equal to
-    "expected", but it turned out that it's not.
+    """Raised when validation specified using the `contents` or `valid/eq` keys fails.
+
+    This exception is the result of a validation failure: `actual` should have
+    been equal to `expected`, but it was not.
+
+    The `expected` attribute contains the expected value specified in the
+    `contents` or `valid/eq` key in .ksy specifications. Note that the syntax
+    `valid/eq: <expression>` has a shorthand form `valid: <expression>`.
+
+    The `actual` attribute contains the actual value parsed from the stream.
     """
 
     def __init__(self, expected, actual, io, src_path):
@@ -967,8 +1007,15 @@ class ValidationNotEqualError(ValidationFailedError):
 
 
 class ValidationLessThanError(ValidationFailedError):
-    """Signals validation failure: we required "actual" value to be
-    greater than or equal to "min", but it turned out that it's not.
+    """Raised when validation specified using the `valid/min` key fails.
+
+    This exception is the result of a validation failure: `actual` should have
+    been greater than or equal to `min`, but it was not.
+
+    The `min` attribute contains the minimum value specified in the `valid/min`
+    key in .ksy specifications.
+
+    The `actual` attribute contains the actual value parsed from the stream.
     """
 
     def __init__(self, min_bound, actual, io, src_path):
@@ -980,8 +1027,15 @@ class ValidationLessThanError(ValidationFailedError):
 
 
 class ValidationGreaterThanError(ValidationFailedError):
-    """Signals validation failure: we required "actual" value to be
-    less than or equal to "max", but it turned out that it's not.
+    """Raised when validation specified using the `valid/max` key fails.
+
+    This exception is the result of a validation failure: `actual` should have
+    been less than or equal to `max`, but it was not.
+
+    The `max` attribute contains the maximum value specified in the `valid/max`
+    key in .ksy specifications.
+
+    The `actual` attribute contains the actual value parsed from the stream.
     """
 
     def __init__(self, max_bound, actual, io, src_path):
@@ -993,8 +1047,12 @@ class ValidationGreaterThanError(ValidationFailedError):
 
 
 class ValidationNotAnyOfError(ValidationFailedError):
-    """Signals validation failure: we required "actual" value to be
-    from the list, but it turned out that it's not.
+    """Raised when validation specified using the `valid/any-of` key fails.
+
+    This exception is the result of a validation failure: `actual` should have
+    been any of the values listed in the `valid/any-of` key, but it was not.
+
+    The `actual` attribute contains the actual value parsed from the stream.
     """
 
     def __init__(self, actual, io, src_path):
@@ -1003,8 +1061,12 @@ class ValidationNotAnyOfError(ValidationFailedError):
 
 
 class ValidationNotInEnumError(ValidationFailedError):
-    """Signals validation failure: we required "actual" value to be in
-    the enum, but it turned out that it's not.
+    """Raised when validation specified using the `valid/in-enum` key fails.
+
+    This exception is the result of a validation failure: `actual` should have
+    been a known value defined in the enum, but it was not.
+
+    The `actual` attribute contains the actual value parsed from the stream.
     """
 
     def __init__(self, actual, io, src_path):
@@ -1013,8 +1075,12 @@ class ValidationNotInEnumError(ValidationFailedError):
 
 
 class ValidationExprError(ValidationFailedError):
-    """Signals validation failure: we required "actual" value to match
-    the expression, but it turned out that it doesn't.
+    """Raised when validation specified using the `valid/expr` key fails.
+
+    This exception is the result of a validation failure: `actual` should have
+    satisfied the validation expression in the `valid/expr` key, but it did not.
+
+    The `actual` attribute contains the actual value parsed from the stream.
     """
 
     def __init__(self, actual, io, src_path):
@@ -1033,9 +1099,7 @@ class ConsistencyError(Exception):
 
 
 class ConsistencyNotCheckedError(Exception):
-    """Thrown when attempting to write an object whose consistency hasn't been
-    checked since the last modification.
-    """
+    """Raised when attempting to write an object with unchecked consistency."""
 
     def __init__(self):
         super().__init__(
