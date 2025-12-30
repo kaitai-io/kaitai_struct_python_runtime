@@ -95,7 +95,8 @@ class ReadWriteKaitaiStruct(KaitaiStruct):
 class KaitaiStream:
     def __init__(self, io):
         self._io = io
-        self.align_to_byte()
+        self.bits_left = 0
+        self.bits = 0
         self.bits_le = False
         self.bits_write_mode = False
 
