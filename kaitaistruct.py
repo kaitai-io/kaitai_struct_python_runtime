@@ -486,7 +486,10 @@ class KaitaiStream:
         )
         actual = self._io.read(len(expected))
         if actual != expected:
-            msg = f"unexpected fixed contents: got {actual!r}, was waiting for {expected!r}"
+            msg = (
+                f"unexpected fixed contents: got {actual!r}, "
+                f"was waiting for {expected!r}"
+            )
             # NOTE: this method has always raised `Exception` directly and is now
             # unused and slated for removal, so there's no point in "fixing" it.
             raise Exception(msg)  # noqa: TRY002
@@ -530,7 +533,10 @@ class KaitaiStream:
 
         num_bytes_left = full_size - pos
         if n > num_bytes_left:
-            msg = f"requested to write {n} bytes, but only {num_bytes_left} bytes left in the stream"
+            msg = (
+                f"requested to write {n} bytes, but only "
+                f"{num_bytes_left} bytes left in the stream"
+            )
             raise EndOfStreamError(msg, n, num_bytes_left)
 
     # region Integer numbers
@@ -1102,5 +1108,6 @@ class ConsistencyNotCheckedError(Exception):
 
     def __init__(self):
         super().__init__(
-            "consistency not checked: _check() has not been called since the last modification of the object"
+            "consistency not checked: _check() has not been called "
+            "since the last modification of the object"
         )
