@@ -56,3 +56,32 @@ convention = "pep257"
 [tool.ruff.format]
 # Like Black, use double quotes for strings.
 quote-style = "double"
+
+[tool.pylint.main]
+# Minimum Python version to use for version dependent checks (should match
+# `python_requires` in setup.cfg)
+py-version = "3.8"
+
+[tool.pylint."messages control"]
+# We only use Pylint because it still contains a number of lints that Ruff doesn't have.
+# That's why we globally suppress Pylint checks that Ruff already implements here. If we
+# didn't do this, we'd have to duplicate Ruff and Pylint suppression comments in the
+# code (since they have different syntax), which doesn't make sense.
+#
+# https://github.com/astral-sh/ruff/issues/970 tracks the current progress of
+# implementing Pylint rules in Ruff.
+disable = [
+    "missing-docstring",
+    # Not considered beneficial (see
+    # https://pylint.readthedocs.io/en/stable/user_guide/checkers/features.html#design-checker
+    # for what this includes)
+    "design",
+    # Not considered beneficial
+    "too-many-lines",
+    # Checked by Ruff
+    "line-too-long",
+    # Checked by Ruff
+    "consider-using-with",
+    # Checked by Ruff
+    "broad-exception-raised"
+]

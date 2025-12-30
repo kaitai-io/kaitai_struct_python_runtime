@@ -19,8 +19,6 @@ __version__ = "0.11"
 # runtime is compatible with the generated code.
 API_VERSION = (0, 11)
 
-# pylint: disable=invalid-name,missing-docstring,too-many-public-methods
-
 
 class KaitaiStruct:
     def __init__(self, io):
