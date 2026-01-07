@@ -813,6 +813,20 @@ class KaitaiStream:
 
     @staticmethod
     def int_from_byte(v):
+        """Convert a byte array item to an integer.
+
+        Deprecated and no longer used as of KSC 0.12. It is only available
+        for backwards compatibility and will be removed in the future.
+
+        This method only made sense to ensure compatibility with Python 2.
+        In Python 3, it's simply an identity function.
+        """
+        warnings.warn(
+            "int_from_byte() is deprecated since 0.12 "
+            "(in Python 3, it is an identity function)",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         return v
 
     @staticmethod
@@ -821,14 +835,53 @@ class KaitaiStream:
 
     @staticmethod
     def byte_array_index(data, i):
+        """Return the byte at index `i` in the byte array `data` as an integer.
+
+        Deprecated and no longer used as of KSC 0.12. It is only available
+        for backwards compatibility and will be removed in the future.
+
+        This method only made sense to ensure compatibility with Python 2.
+        In Python 3, `data[i]` should be used instead.
+        """
+        warnings.warn(
+            "byte_array_index(data, i) is deprecated since 0.12, use data[i] instead",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         return data[i]
 
     @staticmethod
     def byte_array_min(b):
+        """Return the minimum byte in the byte array `data` as an integer.
+
+        Deprecated and no longer used as of KSC 0.12. It is only available
+        for backwards compatibility and will be removed in the future.
+
+        This method only made sense to ensure compatibility with Python 2.
+        In Python 3, `min(b)` should be used instead.
+        """
+        warnings.warn(
+            "byte_array_min(b) is deprecated since 0.12, use min(b) instead",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         return min(b)
 
     @staticmethod
     def byte_array_max(b):
+        """Return the maximum byte in the byte array `data` as an integer.
+
+        Deprecated and no longer used as of KSC 0.12. It is only available
+        for backwards compatibility and will be removed in the future.
+
+        This method only made sense to ensure compatibility with Python 2.
+        In Python 3, `max(b)` should be used instead.
+        """
+        warnings.warn(
+            "byte_array_max(b) is deprecated since 0.12, use max(b) instead",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         return max(b)
 
     @staticmethod
