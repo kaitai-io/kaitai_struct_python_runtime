@@ -323,8 +323,7 @@ class KaitaiStream:
             # 9 bits => 2 bytes
             bytes_needed = ((bits_needed - 1) // 8) + 1  # `ceil(bits_needed / 8)`
             buf = self._read_bytes_not_aligned(bytes_needed)
-            for byte in buf:
-                res = res << 8 | byte
+            res = int.from_bytes(buf, "big")
 
             new_bits = res
             res = res >> self.bits_left | self.bits << bits_needed
@@ -365,8 +364,7 @@ class KaitaiStream:
             # 9 bits => 2 bytes
             bytes_needed = ((bits_needed - 1) // 8) + 1  # `ceil(bits_needed / 8)`
             buf = self._read_bytes_not_aligned(bytes_needed)
-            for i, byte in enumerate(buf):
-                res |= byte << (i * 8)
+            res = int.from_bytes(buf, "little")
 
             new_bits = res >> bits_needed
             res = res << self.bits_left | self.bits
