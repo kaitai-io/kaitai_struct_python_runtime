@@ -831,7 +831,7 @@ class KaitaiStream:
 
     @staticmethod
     def byte_from_int(i):
-        return bytes((i,))
+        return KaitaiStream.packer_u1.pack(i)
 
     @staticmethod
     def byte_array_index(data, i):
