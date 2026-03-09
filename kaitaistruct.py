@@ -2,7 +2,7 @@ import itertools
 import struct
 import warnings
 from contextlib import suppress
-from io import SEEK_CUR, SEEK_END, BytesIO
+from io import SEEK_CUR, SEEK_END, SEEK_SET, BufferedIOBase, BytesIO
 
 # Kaitai Struct runtime version, in the format defined by PEP 440.
 # Used by our setup.cfg to set the version number in
@@ -90,6 +90,81 @@ class ReadWriteKaitaiStruct(KaitaiStruct):
             # rule doesn't know, see https://github.com/astral-sh/ruff/issues/3247
             super_setattr("_dirty", True)  # noqa: FBT003
         super_setattr(key, value)
+
+
+class SubIO(BufferedIOBase):
+    def __init__(self, parent_io, parent_start, size):
+        self.parent_io = parent_io
+        self.parent_start = parent_start
+        self.size = size
+        self._pos = 0
+
+    def readable(self):
+        self._checkClosed()
+        return True
+
+    def seekable(self):
+        self._checkClosed()
+        return True
+
+    def writable(self):
+        self._checkClosed()
+        # NOTE: `SubIO` only supports reading for now
+        return False
+
+    def seek(self, offset, whence=SEEK_SET, /):
+        if not isinstance(offset, int):
+            msg = (
+                f"'{type(offset).__name__}' object cannot be interpreted as an integer"
+            )
+            raise TypeError(msg)
+
+        self._checkClosed()
+
+        if whence == SEEK_SET:
+            if offset < 0:
+                msg = f"negative seek value {offset}"
+                raise ValueError(msg)
+            self._pos = offset
+        elif whence == SEEK_CUR:
+            self._pos += offset
+        elif whence == SEEK_END:
+            self._pos = self.size + offset
+        else:
+            msg = f"invalid whence ({whence}, should be 0, 1 or 2)"
+            raise ValueError(msg)
+
+        self._pos = max(0, self._pos)
+        return self._pos
+
+    def tell(self):
+        self._checkClosed()
+        return self._pos
+
+    def read(self, size=-1, /):
+        if size is None:
+            size = -1
+        if not isinstance(size, int):
+            msg = f"argument should be integer or None, not '{type(size).__name__}'"
+            raise TypeError(msg)
+
+        self._checkClosed()
+
+        left = self.size - self._pos
+
+        size = left if size < 0 else min(size, left)
+        if size <= 0:
+            return b""
+
+        old_pos = self.parent_io.tell()
+        self.parent_io.seek(self.parent_start + self._pos)
+        try:
+            res = self.parent_io.read(size)
+            self._pos += len(res)
+        finally:
+            self.parent_io.seek(old_pos)
+
+        return res
 
 
 class KaitaiStream:
@@ -808,6 +883,27 @@ class KaitaiStream:
     # endregion
 
     # region Misc runtime operations
+
+    def substream(self, n):
+        if not self._io.seekable():
+            # Non-seekable stream => fall back to the traditional copying implementation
+            return KaitaiStream(BytesIO(self.read_bytes(n)))
+
+        self.align_to_byte()
+
+        if n < 0:
+            msg = f"requested invalid {n} amount of bytes"
+            raise InvalidArgumentError(msg)
+
+        pos = self.pos()
+        num_bytes_available = max(0, self.size() - pos)
+        if n > num_bytes_available:
+            msg = f"requested {n} bytes, but only {num_bytes_available} bytes available"
+            raise EndOfStreamError(msg, n, num_bytes_available)
+
+        sub = KaitaiStream(SubIO(self._io, pos, n))
+        self._io.seek(pos + n)
+        return sub
 
     @staticmethod
     def int_from_byte(v):
