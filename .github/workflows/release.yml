@@ -1,3 +1,4 @@
+# See https://packaging.python.org/en/latest/guides/publishing-package-distribution-releases-using-github-actions-ci-cd-workflows/
 name: Publish to TestPyPI and PyPI
 
 on:
@@ -41,9 +42,7 @@ jobs:
       name: testpypi
       url: https://test.pypi.org/p/kaitaistruct
     permissions:
-      # IMPORTANT: mandatory for trusted publishing - see
-      #   https://packaging.python.org/en/latest/guides/publishing-package-distribution-releases-using-github-actions-ci-cd-workflows/
-      id-token: write
+      id-token: write  # IMPORTANT: mandatory for trusted publishing
     steps:
       - name: Download all the dists
         uses: actions/download-artifact@v8
